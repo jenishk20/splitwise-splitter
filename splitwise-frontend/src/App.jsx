@@ -5,49 +5,67 @@ import Homepage from "./components/Homepage";
 import Dashboard from "./components/Dashboard";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import AddExpensePage from "./components/AddExpensePage";
 
 const App = () => {
   const BASE_API_URL = import.meta.env.VITE_API_BASE_URL;
   const [user, setUser] = useState(null);
   const [groups, setGroups] = useState([]);
-  const [accessToken, setAccessToken] = useState(null);
 
   const handleLogin = () => {
     window.location.href = `${BASE_API_URL}/login/auth`;
   };
 
+  const handleLogout = async () => {
+    await axios.post(`${BASE_API_URL}/login/logout`, null, {
+      withCredentials: true,
+    });
+    setUser(null);
+    setGroups([]);
+  };
+
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get("access_token");
-    const name = params.get("first_name");
-
-    if (token) {
-      setAccessToken(token);
-      setUser({ first_name: name, access_token: token });
-
-      axios
-        .get(`${BASE_API_URL}/groups/fetchUserGroups?access_token=${token}`)
-        .then((res) => setGroups(res.data.groups))
-        .catch((err) => console.error("Failed to fetch groups:", err));
-
-      window.history.replaceState({}, document.title, "/");
-    }
+    axios
+      .get(`${BASE_API_URL}/login/me`, { withCredentials: true })
+      .then((res) => {
+        console.log(res);
+        if (res.data.user?.first_name) {
+          setUser({ first_name: res.data.user.first_name });
+          return axios.get(`${BASE_API_URL}/groups/fetchUserGroups`, {
+            withCredentials: true,
+          });
+        }
+      })
+      .then((res) => {
+        if (res) setGroups(res.data.groups);
+      })
+      .catch((err) => {
+        console.error("Auth check failed:", err);
+      });
   }, []);
 
   return (
     <Router>
       <div className="flex flex-col min-h-screen">
-        <Navbar user={user} handleLogin={handleLogin} />
+        <Navbar
+          user={user}
+          handleLogin={handleLogin}
+          handleLogout={handleLogout}
+        />
         <Routes>
           <Route
             path="/"
             element={
               user ? (
-                <Dashboard user={user} groups={groups} token={accessToken} />
+                <Dashboard user={user} groups={groups} />
               ) : (
                 <Homepage handleLogin={handleLogin} />
               )
             }
+          />
+          <Route
+            path="/group/:id/add-expense"
+            element={<AddExpensePage user={user} groups={groups} />}
           />
         </Routes>
         <Footer />

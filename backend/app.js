@@ -3,8 +3,19 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 dotenv.config();
 const { userAuth } = require("./routes/middlewares/userAuth");
+const { connect } = require("./config/database");
 const app = express();
-app.use(cors());
+const cookieParser = require("cookie-parser");
+
+app.use(cookieParser());
+app.use(
+  cors({
+    origin: true,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+  })
+);
+
 app.use(express.json());
 
 const loginRoutes = require("./routes/auth/loginRoutes");
@@ -15,5 +26,12 @@ app.use("/upload", userAuth, fileUploadRoutes);
 app.use("/groups", userAuth, groupRoutes);
 
 app.listen(process.env.PORT, () => {
-  console.log(`Server is running on port ${process.env.PORT}`);
+  connect()
+    .then(() => {
+      console.log("Connected to MongoDB");
+      console.log(`Server is running on port ${process.env.PORT}`);
+    })
+    .catch((err) => {
+      console.error("Error connecting to MongoDB:", err);
+    });
 });

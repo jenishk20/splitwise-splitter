@@ -3,14 +3,15 @@ const { default: axios } = require("axios");
 const router = express.Router();
 
 router.get("/fetchUserGroups", async (req, res) => {
-  const { access_token } = req.query;
   try {
-    const groups = await getUserGroups(access_token);
+    const groups = await getUserGroups(res?.user?.access_token);
+    const user_details = req.cookies.user_details;
     res.status(200).json(groups);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch user groups" });
   }
 });
+
 const getUserGroups = async (access_token) => {
   try {
     const response = await axios.get(

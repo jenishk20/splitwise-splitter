@@ -8,6 +8,7 @@ const {
   getToken,
   getCurrentUser,
 } = require("../../services/splitwiseService");
+const UserModel = require("../../models/User");
 
 router.get("/auth", (req, res) => {
   const url = getAuthURL();
@@ -18,12 +19,50 @@ router.get("/callback", async (req, res) => {
   const { code } = req.query;
   const tokens = await getToken(code);
   const user = await getCurrentUser(tokens.access_token);
+  const access_token = tokens.access_token;
+
+  res.cookie("access_token", access_token, {
+    maxAge: 24 * 60 * 60 * 1000,
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+  });
+
+  res.cookie("user_details", JSON.stringify(user), {
+    maxAge: 24 * 60 * 60 * 1000,
+    httpOnly: false,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+  });
+
+  const { id, first_name, last_name, email } = user?.user;
+  const userDetails = {
+    splitwiseId: id,
+    firstName: first_name,
+    lastName: last_name,
+    email: email,
+  };
+  const existingUser = await UserModel.findOne({ splitwiseId: id });
+  if (!existingUser) {
+    const newUser = new UserModel(userDetails);
+    await newUser.save();
+  } else {
+    await UserModel.updateOne({ splitwiseId: id }, userDetails);
+  }
   const frontendURL = process.env.FRONTEND_URL || "http://localhost:5173";
-  const redirectURL = `${frontendURL}/?access_token=${
-    tokens.access_token
-  }&first_name=${encodeURIComponent(user?.user?.first_name)}`;
-  console.log("Redicrect URL is ", redirectURL);
-  res.redirect(redirectURL);
+  res.redirect(frontendURL);
+});
+
+router.get("/me", async (req, res) => {
+  const user_details = req.cookies.user_details;
+  try {
+    if (!user_details) throw new Error("No user cookie");
+
+    const parsed = JSON.parse(user_details);
+    res.json(parsed);
+  } catch (e) {
+    res.status(401).json({ message: "Unauthorized" });
+  }
 });
 
 module.exports = router;

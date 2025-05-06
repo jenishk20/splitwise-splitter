@@ -12,7 +12,7 @@ const upload = multer({ dest: "uploads/" });
 const textract = new TextractClient({
   region: "us-east-1",
   credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY, // ← from IAM
+    accessKeyId: process.env.AWS_ACCESS_KEY,
     secretAccessKey: process.env.AWS_SECRET_KEY,
   },
 });
@@ -34,10 +34,8 @@ router.post("/parse-invoice", upload.single("invoice"), async (req, res) => {
     const lines = textractResponse.Blocks.filter(
       (b) => b.BlockType === "LINE"
     ).map((b) => b.Text);
+    console.log("Textract lines:", lines);
 
-    console.log("\n📃 Extracted lines from Textract:\n", lines);
-
-    // Use Ollama LLM to convert text to structured JSON
     const prompt = `
     You are a JSON-only grocery receipt parser.
     
@@ -81,7 +79,6 @@ router.post("/parse-invoice", upload.single("invoice"), async (req, res) => {
       res.status(400).json({ error: "Failed to parse JSON", raw: result });
     }
   } catch (err) {
-    console.error("❌ Textract error:", err.message);
     res.status(500).json({ error: "Textract failed", details: err.message });
   }
 });

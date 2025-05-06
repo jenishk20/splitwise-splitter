@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import AddExpenseModal from "./AddExpenseModal";
+import { useNavigate } from "react-router-dom";
+
 const Dashboard = ({ user, groups, token }) => {
   const [openGroupId, setOpenGroupId] = useState(null);
   const [showModalForGroup, setShowModalForGroup] = useState(null);
-
+  const navigate = useNavigate();
   const toggleGroup = (id) => {
     setOpenGroupId(openGroupId === id ? null : id);
   };
@@ -85,7 +87,7 @@ const Dashboard = ({ user, groups, token }) => {
               </div>
               {!isSettled && (
                 <button
-                  onClick={() => setShowModalForGroup(group)}
+                  onClick={() => navigate(`/group/${group.id}/add-expense`)}
                   className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
                 >
                   Add Expense

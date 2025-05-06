@@ -1,23 +1,27 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import Papa from "papaparse";
 
-const AddExpenseModal = ({ group, members, onClose, token }) => {
+const AddExpensePage = ({ user, groups }) => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const group = groups.find((g) => g.id === Number(id));
   const [uploadMode, setUploadMode] = useState("csv");
   const [items, setItems] = useState([]);
   const [participation, setParticipation] = useState({});
-  console.log("Upload Mode is ", uploadMode);
+  const [loading, setLoading] = useState(false);
+
   const initParticipation = (data) => {
-    const defaultState = {};
+    const state = {};
     data.forEach((_, idx) => {
-      defaultState[idx] = {};
-      members.forEach((m) => {
-        defaultState[idx][m.id] = true;
+      state[idx] = {};
+      group.members.forEach((m) => {
+        state[idx][m.id] = m.id === user.id;
       });
     });
-    setParticipation(defaultState);
+    setParticipation(state);
   };
 
-  console.log(import.meta.env.VITE_API_BASE_URL);
   const handleCSVUpload = (e) => {
     const file = e.target.files[0];
     Papa.parse(file, {
@@ -34,20 +38,21 @@ const AddExpenseModal = ({ group, members, onClose, token }) => {
     const file = e.target.files[0];
     const formData = new FormData();
     formData.append("invoice", file);
+    setLoading(true);
     const BASE_API_URL = import.meta.env.VITE_API_BASE_URL;
     const res = await fetch(`${BASE_API_URL}/upload/parse-invoice`, {
       method: "POST",
       body: formData,
       credentials: "include",
     });
-
     const parsedItems = await res.json();
     setItems(parsedItems);
-    console.log(parsedItems);
     initParticipation(parsedItems);
+    setLoading(false);
   };
 
   const toggleParticipation = (itemIdx, userId) => {
+    if (userId !== user.id) return;
     setParticipation((prev) => ({
       ...prev,
       [itemIdx]: {
@@ -60,19 +65,27 @@ const AddExpenseModal = ({ group, members, onClose, token }) => {
   const handleSubmit = () => {
     console.log("Items:", items);
     console.log("Participation:", participation);
-
-    onClose(); // close modal
+    navigate("/");
   };
+  console.log(group);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
-      <div className="bg-white p-6 rounded-xl w-full max-w-4xl h-[80vh] overflow-y-auto">
-        <h2 className="text-2xl font-semibold mb-4">
-          Add Expense - {group.name}
-        </h2>
+    <div className="flex p-6 space-x-6">
+      {/* Left: Members */}
+      <div className="w-1/4 bg-white rounded-xl shadow p-4">
+        <h2 className="text-lg font-semibold mb-3">{group.name}</h2>
+        <ul className="text-gray-700 space-y-2">
+          {group.members.map((m) => (
+            <li key={m.id} className="border-b pb-1">
+              {m.first_name} {m.id === user.id && "(You)"}
+            </li>
+          ))}
+        </ul>
+      </div>
 
-        {/* Toggle */}
-        <div className="flex space-x-4 mb-4">
+      {/* Right: Upload + Table */}
+      <div className="w-3/4 bg-white rounded-xl shadow p-4">
+        <div className="mb-4">
           <button
             onClick={() => setUploadMode("csv")}
             className={`px-4 py-2 rounded ${
@@ -83,7 +96,7 @@ const AddExpenseModal = ({ group, members, onClose, token }) => {
           </button>
           <button
             onClick={() => setUploadMode("image")}
-            className={`px-4 py-2 rounded ${
+            className={`ml-2 px-4 py-2 rounded ${
               uploadMode === "image" ? "bg-blue-600 text-white" : "bg-gray-200"
             }`}
           >
@@ -91,15 +104,15 @@ const AddExpenseModal = ({ group, members, onClose, token }) => {
           </button>
         </div>
 
-        {/* File Input */}
         <input
           type="file"
           accept={uploadMode === "csv" ? ".csv" : "image/*"}
           onChange={uploadMode === "csv" ? handleCSVUpload : handleImageUpload}
-          className="mb-6"
+          className="mb-4"
         />
 
-        {/* Preview Table */}
+        {loading && <p className="text-center">⏳ Parsing invoice...</p>}
+
         {items.length > 0 && (
           <table className="w-full border text-sm text-left">
             <thead>
@@ -109,7 +122,7 @@ const AddExpenseModal = ({ group, members, onClose, token }) => {
                     {key}
                   </th>
                 ))}
-                {members.map((m) => (
+                {group.members.map((m) => (
                   <th key={m.id} className="p-2 border text-center">
                     {m.first_name}
                   </th>
@@ -124,11 +137,12 @@ const AddExpenseModal = ({ group, members, onClose, token }) => {
                       {val}
                     </td>
                   ))}
-                  {members.map((m) => (
+                  {group.members.map((m) => (
                     <td key={m.id} className="p-2 border text-center">
                       <input
                         type="checkbox"
                         checked={participation?.[rowIdx]?.[m.id] ?? false}
+                        disabled={m.id !== user.id}
                         onChange={() => toggleParticipation(rowIdx, m.id)}
                       />
                     </td>
@@ -139,23 +153,19 @@ const AddExpenseModal = ({ group, members, onClose, token }) => {
           </table>
         )}
 
-        <div className="mt-6 flex justify-end space-x-4">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
-          >
-            Submit
-          </button>
-        </div>
+        {items.length > 0 && (
+          <div className="mt-6 flex justify-end">
+            <button
+              onClick={handleSubmit}
+              className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+            >
+              Submit
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
-export default AddExpenseModal;
+export default AddExpensePage;
