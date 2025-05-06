@@ -22,6 +22,7 @@ router.get("/callback", async (req, res) => {
   const redirectURL = `${frontendURL}/?access_token=${
     tokens.access_token
   }&first_name=${encodeURIComponent(user?.user?.first_name)}`;
+  console.log("Redicrect URL is ", redirectURL);
   res.redirect(redirectURL);
 });
 

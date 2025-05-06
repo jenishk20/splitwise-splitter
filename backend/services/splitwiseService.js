@@ -10,6 +10,7 @@ const getAuthURL = (req, res) => {
 };
 
 const getToken = async (code) => {
+  console.log("Coming here", code);
   const response = await axios.post(
     "https://secure.splitwise.com/oauth/token",
     null,
@@ -23,6 +24,7 @@ const getToken = async (code) => {
       },
     }
   );
+  console.log("Response is ", response.data);
   return response.data;
 };
 
