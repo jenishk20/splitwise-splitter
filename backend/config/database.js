@@ -1,8 +1,8 @@
 const mongoose = require("mongoose");
+const dotenv = require("dotenv");
+dotenv.config();
 const connect = async () => {
-  await mongoose.connect(
-    "mongodb+srv://jkothari2001:jenishk@insurance-data.im53i.mongodb.net/splitwise"
-  );
+  await mongoose.connect(process.env.MONGODB_URL);
 };
 
 module.exports = { connect };
