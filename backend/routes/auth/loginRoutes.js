@@ -24,14 +24,14 @@ router.get("/callback", async (req, res) => {
     maxAge: 24 * 60 * 60 * 1000,
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
+    sameSite: "none",
   });
 
   res.cookie("user_details", JSON.stringify(user), {
     maxAge: 24 * 60 * 60 * 1000,
     httpOnly: false,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
+    sameSite: "none",
   });
 
   const { id, first_name, last_name, email } = user?.user;
@@ -63,7 +63,7 @@ router.get("/me", async (req, res) => {
     const parsed = JSON.parse(user_details);
     res.json(parsed);
   } catch (e) {
-    res.status(401).json({ message: "Unauthorized" });
+    res.status(401).json({ message: "Unauthorized", details: e.message });
   }
 });
 
