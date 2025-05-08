@@ -3,3 +3,4 @@ backend/node_modules/*
 package-lock.json
 splitwise-frontend/node_modules/*
 backend/uploads/*
+splitwise-frontend/dist/*
