@@ -8,7 +8,7 @@ const {
   getToken,
   getCurrentUser,
 } = require("../../services/splitwiseService");
-const UserModel = require("../../models/User");
+const UserModel = require("../../models/user");
 
 router.get("/auth", (req, res) => {
   const url = getAuthURL();
