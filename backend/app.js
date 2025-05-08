@@ -8,11 +8,12 @@ const app = express();
 const cookieParser = require("cookie-parser");
 
 app.use(cookieParser());
+console.log("CORS enabled for:", process.env.FRONTEND_URL);
 app.use(
   cors({
     origin: process.env.FRONTEND_URL,
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   })
 );
 
