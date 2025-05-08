@@ -1,6 +1,7 @@
 const { default: axios } = require("axios");
 const express = require("express");
 require("dotenv").config();
+const fetch = require("node-fetch");
 
 const getAuthURL = (req, res) => {
   const clientId = process.env.SPLITWISE_CLIENT_ID;
@@ -37,8 +38,6 @@ const getCurrentUser = async (accessToken) => {
 
   return response.data;
 };
-
-const fetch = require("node-fetch");
 
 const postToSplitwise = async (
   groupId,
