@@ -20,7 +20,6 @@ router.get("/callback", async (req, res) => {
   const tokens = await getToken(code);
   const user = await getCurrentUser(tokens.access_token);
   const access_token = tokens.access_token;
-  console.log("For the token user the response is ", user);
   res.cookie("access_token", access_token, {
     maxAge: 24 * 60 * 60 * 1000,
     httpOnly: true,
@@ -54,9 +53,9 @@ router.get("/callback", async (req, res) => {
 });
 
 router.get("/me", async (req, res) => {
-  const user_details = JSON.parse(req.cookies.user_details);
+  const user_details = req.cookies.user_details;
 
-  console.log("Here in User Details", JSON.parse(req.cookies.user_details));
+  console.log("Here in User Details", req.cookies.user_details);
 
   try {
     if (!user_details) throw new Error("No user cookie");
