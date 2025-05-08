@@ -137,7 +137,7 @@ const AddExpensePage = ({ user, groups }) => {
 
     try {
       await fetch(`${BASE_API_URL}/expenses/update-preferences/${expenseId}`, {
-        method: "PATCH",
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ items: updatedItems }),

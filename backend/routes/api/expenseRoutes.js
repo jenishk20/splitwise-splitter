@@ -60,7 +60,7 @@ router.post("/submit-expense", async (req, res) => {
   }
 });
 
-router.patch("/update-preferences/:expenseId", async (req, res) => {
+router.post("/update-preferences/:expenseId", async (req, res) => {
   const { expenseId } = req.params;
   const { items } = req.body;
 
