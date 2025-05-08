@@ -9,7 +9,9 @@ const ExpenseCard = ({
   participationMap,
   onToggleParticipation,
   onSubmitPreferences,
+  onFinalize,
 }) => {
+  console.log(user, expense);
   return (
     <div className="border rounded mb-4 shadow">
       <div
@@ -17,8 +19,9 @@ const ExpenseCard = ({
         onClick={() => onToggleExpand(expense._id)}
       >
         <span className="font-semibold">
-          Expense #{expense._id.slice(-4)} by {expense.userId}
+          Expense #{expense._id.slice(-4)} by {expense.userName}
         </span>
+
         <span>{expanded ? "▲" : "▼"}</span>
       </div>
 
@@ -71,6 +74,14 @@ const ExpenseCard = ({
             >
               Submit Preferences
             </button>
+            {user.id.toString() === expense.userId.toString() && (
+              <button
+                onClick={() => onFinalize(expense._id)}
+                className="mt-2 mx-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-purple-700"
+              >
+                Finalize on Splitwise
+              </button>
+            )}
           </div>
         </div>
       )}

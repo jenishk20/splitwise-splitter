@@ -1,14 +1,17 @@
-// src/pages/AddExpensePage.jsx
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import Papa from "papaparse";
 import ExpenseCard from "../components/ExpenseCard";
+import Snackbar from "./Snackbar";
 
 const BASE_API_URL = import.meta.env.VITE_API_BASE_URL;
 
 const AddExpensePage = ({ user, groups }) => {
   const { id } = useParams();
   const group = groups.find((g) => g.id === Number(id));
+
+  const [showSnackbar, setShowSnackbar] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
 
   const [uploadMode, setUploadMode] = useState("csv");
   const [items, setItems] = useState([]);
@@ -125,8 +128,6 @@ const AddExpensePage = ({ user, groups }) => {
     });
   };
 
-  console.log(participationMap);
-
   const handleSubmitForExpense = async (expenseId) => {
     const expense = unsettledExpenses.find((e) => e._id === expenseId);
     const updatedItems = expense.items.map((item, idx) => ({
@@ -135,18 +136,44 @@ const AddExpensePage = ({ user, groups }) => {
     }));
 
     try {
-      await fetch(
-        `${BASE_API_URL}/expenses/update-participation/${expenseId}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ items: updatedItems }),
-        }
-      );
+      await fetch(`${BASE_API_URL}/expenses/update-preferences/${expenseId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ items: updatedItems }),
+      });
+      setSnackbarMessage("Expense submitted successfully!");
+      setShowSnackbar(true);
+      setTimeout(() => setShowSnackbar(false), 3000);
       fetchExpenses();
     } catch (err) {
       console.error("Failed to update preferences", err);
+    }
+  };
+
+  const onFinalize = async (expenseId) => {
+    try {
+      const res = await fetch(
+        `${BASE_API_URL}/expenses/finalize/${expenseId}`,
+        {
+          method: "POST",
+          credentials: "include",
+        }
+      );
+      const data = await res.json();
+      if (data.success) {
+        setSnackbarMessage("Expense finalized on Splitwise 🎉");
+        setShowSnackbar(true);
+        setTimeout(() => setShowSnackbar(false), 3000);
+        fetchExpenses();
+      } else {
+        throw new Error(data.message);
+      }
+    } catch (err) {
+      setSnackbarMessage("Failed to finalize expense.");
+      setShowSnackbar(true);
+      setTimeout(() => setShowSnackbar(false), 3000);
+      console.error(err);
     }
   };
 
@@ -162,6 +189,7 @@ const AddExpensePage = ({ user, groups }) => {
           ))}
         </ul>
       </div>
+      <Snackbar message={snackbarMessage} visible={showSnackbar} />
 
       <div className="w-3/4 bg-white rounded-xl shadow p-4">
         <div className="mb-4">
@@ -264,6 +292,7 @@ const AddExpensePage = ({ user, groups }) => {
             participationMap={participationMap}
             onToggleParticipation={onToggleParticipation}
             onSubmitPreferences={handleSubmitForExpense}
+            onFinalize={onFinalize}
           />
         ))}
       </div>

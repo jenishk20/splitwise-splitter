@@ -1,12 +1,13 @@
 const express = require("express");
 const router = express.Router();
 const ExpenseModel = require("../../models/expense");
-const { route } = require("./fileUploadRoutes");
+const { computeUserShares } = require("../../utils/costSplitter");
+const { postToSplitwise } = require("../../services/splitwiseService");
 
 router.get("/get-expenses/:groupId", async (req, res) => {
   const { groupId } = req.params;
   try {
-    const expenses = await ExpenseModel.find({ groupId });
+    const expenses = await ExpenseModel.find({ groupId, status: "pending" });
     res.json(expenses);
   } catch (err) {
     res
@@ -56,6 +57,87 @@ router.post("/submit-expense", async (req, res) => {
     res
       .status(500)
       .json({ error: "Failed to create expense", details: err.message });
+  }
+});
+
+router.patch("/update-preferences/:expenseId", async (req, res) => {
+  const { expenseId } = req.params;
+  const { items } = req.body;
+
+  try {
+    const expense = await ExpenseModel.findById(expenseId);
+    if (!expense) {
+      return res.status(404).json({ error: "Expense not found" });
+    }
+
+    expense.items = items;
+    await expense.save();
+
+    res.json({ message: "Preferences updated successfully" });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ error: "Failed to update preferences", details: err.message });
+  }
+});
+
+router.post("/finalize/:expenseId", async (req, res) => {
+  const { expenseId } = req.params;
+  const access_token = req.user.access_token;
+
+  try {
+    const expense = await ExpenseModel.findById(expenseId);
+    if (!expense)
+      return res.status(404).json({ success: false, message: "Not found" });
+
+    if (String(req.user.user_details.user.id) !== String(expense.userId)) {
+      return res.status(403).json({ success: false, message: "Unauthorized" });
+    }
+
+    const { totalCost, userShares } = computeUserShares(
+      expense.items,
+      expense.userId
+    );
+    const participantCount = Object.keys(userShares).length;
+    if (
+      participantCount === 1 &&
+      Object.keys(userShares)[0] === expense.userId
+    ) {
+      return res.json({
+        success: true,
+        message: "Only creator is participant. No need to post to Splitwise.",
+      });
+    }
+
+    const result = await postToSplitwise(
+      expense.groupId,
+      "Finalized Shared Expense",
+      totalCost,
+      userShares,
+      expense.userId,
+      access_token
+    );
+
+    if (result.errors.length > 0) {
+      return res.status(500).json({
+        success: false,
+        message: "Splitwise API error",
+        errors: result.errors,
+      });
+    }
+
+    expense.status = "settled";
+    await expense.save();
+
+    res.json({
+      success: true,
+      message: "Finalized on Splitwise",
+      splitwiseExpense: result,
+    });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ error: "Failed to finalize expense", details: err.message });
   }
 });
 

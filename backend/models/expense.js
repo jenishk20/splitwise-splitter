@@ -15,7 +15,7 @@ const expenseSchema = new Schema(
     userName: {
       type: String,
       required: true,
-    },
+    },  
     items: [
       {
         item: String,

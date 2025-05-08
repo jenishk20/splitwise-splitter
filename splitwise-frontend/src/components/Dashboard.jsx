@@ -41,7 +41,6 @@ const Dashboard = ({ user, groups, token }) => {
         />
       )}
 
-      {/* Summary */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-white mb-10 max-w-5xl mx-auto">
         <div className="bg-blue-500 rounded-xl p-4 shadow-md text-center">
           <div className="text-sm uppercase">Total Groups</div>
@@ -59,13 +58,9 @@ const Dashboard = ({ user, groups, token }) => {
         </div>
       </div>
 
-      {/* Groups */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl mx-auto">
         {groups.map((group) => {
-          const isSettled = group.members.every(
-            (m) => Number(m.balance?.[0]?.amount ?? 0) === 0
-          );
-          console.log(isSettled);
+          const isSettled = false;
 
           return (
             <div
