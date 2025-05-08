@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require("multer");
 const fs = require("fs");
 const axios = require("axios");
+const ExpenseModel = require("../../models/expense");
 const {
   TextractClient,
   AnalyzeDocumentCommand,

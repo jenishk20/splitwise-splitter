@@ -4,7 +4,7 @@ const router = express.Router();
 
 router.get("/fetchUserGroups", async (req, res) => {
   try {
-    const groups = await getUserGroups(res?.user?.access_token);
+    const groups = await getUserGroups(req?.user?.access_token);
     const user_details = req.cookies.user_details;
     res.status(200).json(groups);
   } catch (error) {

@@ -21,9 +21,12 @@ app.use(express.json());
 const loginRoutes = require("./routes/auth/loginRoutes");
 const fileUploadRoutes = require("./routes/api/fileUploadRoutes");
 const groupRoutes = require("./routes/api/groupRoutes");
+const expenseRoutes = require("./routes/api/expenseRoutes");
+
 app.use("/login", loginRoutes);
 app.use("/upload", userAuth, fileUploadRoutes);
 app.use("/groups", userAuth, groupRoutes);
+app.use("/expenses", userAuth, expenseRoutes);
 
 app.listen(process.env.PORT, () => {
   connect()

@@ -1,11 +1,34 @@
 import React, { useState } from "react";
 import Papa from "papaparse";
-
-const AddExpenseModal = ({ group, members, onClose, token }) => {
+const BASE_API_URL = import.meta.env.VITE_API_BASE_URL;
+const AddExpenseModal = ({ group, members, onClose }) => {
   const [uploadMode, setUploadMode] = useState("csv");
   const [items, setItems] = useState([]);
   const [participation, setParticipation] = useState({});
-  console.log("Upload Mode is ", uploadMode);
+
+  const fetchExpenses = async () => {
+    console.log("Fetching expenses for group:", group);
+    try {
+      const res = await fetch(`${BASE_API_URL}/groups/${group.id}/expenses`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+      const data = await res.json();
+      console.log("Fetched expenses:", data);
+      setItems(data.items);
+      initParticipation(data.items);
+    } catch (error) {
+      console.error("Error fetching expenses:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchExpenses();
+  }, []);
+
   const initParticipation = (data) => {
     const defaultState = {};
     data.forEach((_, idx) => {
@@ -17,7 +40,6 @@ const AddExpenseModal = ({ group, members, onClose, token }) => {
     setParticipation(defaultState);
   };
 
-  console.log(import.meta.env.VITE_API_BASE_URL);
   const handleCSVUpload = (e) => {
     const file = e.target.files[0];
     Papa.parse(file, {
@@ -57,11 +79,32 @@ const AddExpenseModal = ({ group, members, onClose, token }) => {
     }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     console.log("Items:", items);
     console.log("Participation:", participation);
+    const formattedItems = items.map((item, idx) => ({
+      ...item,
+      participation: participation[idx],
+    }));
+    const payload = {
+      groupId: group.id,
+      items: formattedItems,
+    };
 
-    onClose(); // close modal
+    try {
+      const res = await fetch(`${BASE_API_URL}/upload/submit-invoice`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+        credentials: "include",
+      });
+      const data = await res.json();
+      console.log("Response:", data);
+    } catch (error) {
+      console.error("Error submitting expense:", error);
+    }
   };
 
   return (
@@ -71,7 +114,6 @@ const AddExpenseModal = ({ group, members, onClose, token }) => {
           Add Expense - {group.name}
         </h2>
 
-        {/* Toggle */}
         <div className="flex space-x-4 mb-4">
           <button
             onClick={() => setUploadMode("csv")}
