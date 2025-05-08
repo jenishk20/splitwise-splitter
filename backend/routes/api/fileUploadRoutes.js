@@ -35,7 +35,6 @@ router.post("/parse-invoice", upload.single("invoice"), async (req, res) => {
     const lines = textractResponse.Blocks.filter(
       (b) => b.BlockType === "LINE"
     ).map((b) => b.Text);
-    console.log("Textract lines:", lines);
 
     const prompt = `
     You are a JSON-only grocery receipt parser.
@@ -63,7 +62,7 @@ router.post("/parse-invoice", upload.single("invoice"), async (req, res) => {
     `;
 
     const llmResponse = await axios.post(
-      "http://localhost:11434/api/generate",
+      "https://dddc-2601-19b-701-ffe0-f595-9274-6479-6a7e.ngrok-free.app/api/generate",
       {
         model: "llama3",
         prompt,
