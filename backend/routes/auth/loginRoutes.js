@@ -55,6 +55,8 @@ router.get("/callback", async (req, res) => {
 
 router.get("/me", async (req, res) => {
   const user_details = req.cookies.user_details;
+  console.log("Here in User Details", req.cookies);
+
   try {
     if (!user_details) throw new Error("No user cookie");
 
