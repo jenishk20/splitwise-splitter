@@ -28,7 +28,7 @@ const App = () => {
     axios
       .get(`${BASE_API_URL}/login/me`, { withCredentials: true })
       .then((res) => {
-
+        
         if (res.data.user?.first_name) {
           setUser(res?.data?.user);
           return axios.get(`${BASE_API_URL}/groups/fetchUserGroups`, {

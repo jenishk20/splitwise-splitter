@@ -61,14 +61,11 @@ router.post("/parse-invoice", upload.single("invoice"), async (req, res) => {
     ]
     `;
 
-    const llmResponse = await axios.post(
-      "https://dddc-2601-19b-701-ffe0-f595-9274-6479-6a7e.ngrok-free.app/api/generate",
-      {
-        model: "llama3",
-        prompt,
-        stream: false,
-      }
-    );
+    const llmResponse = await axios.post(process.env.MODEL_HOST_ID, {
+      model: "llama3",
+      prompt,
+      stream: false,
+    });
 
     const result = llmResponse.data.response.trim();
 
