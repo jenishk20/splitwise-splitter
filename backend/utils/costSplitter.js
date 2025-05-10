@@ -22,7 +22,24 @@ const computeUserShares = (items, payerId) => {
     });
   });
 
-  return { totalCost: total, userShares: userTotals };
+  const userIds = Object.keys(userTotals);
+  const roundedShares = userIds.map((id) =>
+    parseFloat(userTotals[id].toFixed(2))
+  );
+
+  const roundedTotalOwed = roundedShares.reduce((acc, val) => acc + val, 0);
+  const targetTotal = parseFloat(total.toFixed(2));
+  const diff = targetTotal - roundedTotalOwed;
+
+  const lastUserId = userIds[userIds.length - 1];
+  roundedShares[roundedShares.length - 1] += diff;
+
+  const reconciledUserShares = {};
+  userIds.forEach((id, i) => {
+    reconciledUserShares[id] = parseFloat(roundedShares[i].toFixed(2));
+  });
+
+  return { totalCost: targetTotal, userShares: reconciledUserShares };
 };
 
 module.exports = { computeUserShares };
