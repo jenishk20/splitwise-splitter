@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  useNavigate,
+} from "react-router-dom";
 import axios from "axios";
 import Homepage from "./components/Homepage";
 import Dashboard from "./components/Dashboard";
@@ -17,18 +22,26 @@ const App = () => {
   };
 
   const handleLogout = async () => {
-    await axios.post(`${BASE_API_URL}/login/logout`, null, {
-      withCredentials: true,
-    });
-    setUser(null);
-    setGroups([]);
+    try {
+      const res = await axios.post(
+        `${BASE_API_URL}/login/logout`,
+        {},
+        {
+          withCredentials: true,
+        }
+      );
+      setUser(null);
+      setGroups([]);
+      window.location.href = "/";
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
   };
 
   useEffect(() => {
     axios
       .get(`${BASE_API_URL}/login/me`, { withCredentials: true })
       .then((res) => {
-        
         if (res.data.user?.first_name) {
           setUser(res?.data?.user);
           return axios.get(`${BASE_API_URL}/groups/fetchUserGroups`, {

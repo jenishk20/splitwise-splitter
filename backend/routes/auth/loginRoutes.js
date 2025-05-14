@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const dotenv = require("dotenv");
-const { default: axios } = require("axios");
 dotenv.config();
 const {
   getAuthURL,
@@ -53,14 +52,20 @@ router.get("/callback", async (req, res) => {
 });
 
 router.get("/me", async (req, res) => {
-  const user_details = req.cookies.user_details;
   try {
+    const user_details = req.cookies.user_details;
     if (!user_details) throw new Error("No user cookie");
     const parsed = JSON.parse(user_details);
     res.json(parsed);
   } catch (e) {
     res.status(401).json({ message: "Unauthorized", details: e.message });
   }
+});
+
+router.post("/logout", async (req, res) => {
+  res.clearCookie("access_token");
+  res.clearCookie("user_details");
+  res.status(200).json({ success: true, message: "Logged out successfully" });
 });
 
 module.exports = router;

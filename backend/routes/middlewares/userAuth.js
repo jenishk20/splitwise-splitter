@@ -4,7 +4,6 @@ const userAuth = async (req, res, next) => {
   try {
     var user_details = JSON.parse(user_details_raw);
   } catch (e) {
-    console.log("Error parsing user_details cookie:", e);
     user_details = null;
   }
   if (!access_token || !user_details) {

@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
-const Navbar = ({ user, handleLogin }) => {
+const Navbar = ({ user, handleLogin, handleLogout }) => {
   return (
     <nav className="flex justify-between items-center px-8 py-4 bg-white shadow-md">
       <h1 className="text-2xl font-bold text-blue-700">SplitMate</h1>
@@ -13,9 +13,17 @@ const Navbar = ({ user, handleLogin }) => {
           Contact Us
         </Link>
         {user ? (
-          <span className="text-blue-700 font-semibold">
-            Hi, {user.first_name}
-          </span>
+          <>
+            <span className="text-blue-700 font-semibold">
+              Hi, {user.first_name}
+            </span>
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+            >
+              Logout
+            </button>
+          </>
         ) : (
           <button
             onClick={handleLogin}

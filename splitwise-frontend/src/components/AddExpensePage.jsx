@@ -10,6 +10,7 @@ const AddExpensePage = ({ user, groups }) => {
   const { id } = useParams();
   const group = groups.find((g) => g.id === Number(id));
 
+  const [description, setDescription] = useState("");
   const [showSnackbar, setShowSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
 
@@ -192,31 +193,50 @@ const AddExpensePage = ({ user, groups }) => {
       <Snackbar message={snackbarMessage} visible={showSnackbar} />
 
       <div className="w-3/4 bg-white rounded-xl shadow p-4">
-        <div className="mb-4">
+        <div className="flex gap-4 mb-4">
           <button
             onClick={() => setUploadMode("csv")}
-            className={`px-4 py-2 rounded ${
-              uploadMode === "csv" ? "bg-blue-600 text-white" : "bg-gray-200"
-            }`}
+            className={`flex-1 py-2 rounded-lg text-sm font-semibold shadow 
+      ${
+        uploadMode === "csv"
+          ? "bg-blue-600 text-white"
+          : "bg-gray-100 hover:bg-gray-200"
+      }`}
           >
-            Upload CSV
+            📄 Upload CSV
           </button>
           <button
             onClick={() => setUploadMode("image")}
-            className={`ml-2 px-4 py-2 rounded ${
-              uploadMode === "image" ? "bg-blue-600 text-white" : "bg-gray-200"
-            }`}
+            className={`flex-1 py-2 rounded-lg text-sm font-semibold shadow 
+      ${
+        uploadMode === "image"
+          ? "bg-blue-600 text-white"
+          : "bg-gray-100 hover:bg-gray-200"
+      }`}
           >
-            Upload Invoice Image
+            🧾 Upload Invoice Image
           </button>
         </div>
 
-        <input
-          type="file"
-          accept={uploadMode === "csv" ? ".csv" : "image/*"}
-          onChange={uploadMode === "csv" ? handleCSVUpload : handleImageUpload}
-          className="mb-4"
-        />
+        <div className="mb-4">
+          <label
+            htmlFor="fileUpload"
+            className="inline-block cursor-pointer px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition"
+          >
+            {uploadMode === "csv"
+              ? "📄 Choose CSV File"
+              : "🧾 Choose Invoice Image"}
+          </label>
+          <input
+            id="fileUpload"
+            type="file"
+            accept={uploadMode === "csv" ? ".csv" : "image/*"}
+            onChange={
+              uploadMode === "csv" ? handleCSVUpload : handleImageUpload
+            }
+            className="hidden"
+          />
+        </div>
 
         {loading && <p className="text-center">⏳ Parsing invoice...</p>}
 
@@ -268,6 +288,18 @@ const AddExpensePage = ({ user, groups }) => {
                 ))}
               </tbody>
             </table>
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Description of the Expense
+              </label>
+              <input
+                type="text"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="e.g., Costco groceries, dinner bill..."
+                className="w-full border px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+              />
+            </div>
 
             <div className="mt-4 text-right">
               <button
@@ -280,21 +312,36 @@ const AddExpensePage = ({ user, groups }) => {
           </>
         )}
 
-        <h3 className="text-lg font-semibold mt-8 mb-4">Unsettled Expenses</h3>
-        {unsettledExpenses.map((expense) => (
-          <ExpenseCard
-            key={expense._id}
-            expense={expense}
-            group={group}
-            user={user}
-            expanded={expandedMap[expense._id] || false}
-            onToggleExpand={toggleExpanded}
-            participationMap={participationMap}
-            onToggleParticipation={onToggleParticipation}
-            onSubmitPreferences={handleSubmitForExpense}
-            onFinalize={onFinalize}
-          />
-        ))}
+        {unsettledExpenses.length === 0 && (
+          <div className="text-center mt-8">
+            <h2 className="text-lg font-semibold mb-4">
+              No unsettled expenses found.
+            </h2>
+            <p className="text-gray-500">All expenses are settled! 🎉</p>
+          </div>
+        )}
+
+        {unsettledExpenses.length != 0 && (
+          <>
+            <h3 className="text-lg font-semibold mt-8 mb-4">
+              Unsettled Expenses
+            </h3>
+            {unsettledExpenses.map((expense) => (
+              <ExpenseCard
+                key={expense._id}
+                expense={expense}
+                group={group}
+                user={user}
+                expanded={expandedMap[expense._id] || false}
+                onToggleExpand={toggleExpanded}
+                participationMap={participationMap}
+                onToggleParticipation={onToggleParticipation}
+                onSubmitPreferences={handleSubmitForExpense}
+                onFinalize={onFinalize}
+              />
+            ))}
+          </>
+        )}
       </div>
     </div>
   );

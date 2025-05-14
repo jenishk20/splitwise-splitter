@@ -19,17 +19,16 @@ const textract = new TextractClient({
 });
 
 router.post("/parse-invoice", upload.single("invoice"), async (req, res) => {
-  const fileBytes = fs.readFileSync(req.file.path);
-  fs.unlinkSync(req.file.path);
-
-  const command = new AnalyzeDocumentCommand({
-    Document: {
-      Bytes: fileBytes,
-    },
-    FeatureTypes: ["FORMS", "TABLES"],
-  });
-
   try {
+    const fileBytes = fs.readFileSync(req.file.path);
+    fs.unlinkSync(req.file.path);
+
+    const command = new AnalyzeDocumentCommand({
+      Document: {
+        Bytes: fileBytes,
+      },
+      FeatureTypes: ["FORMS", "TABLES"],
+    });
     const textractResponse = await textract.send(command);
 
     const lines = textractResponse.Blocks.filter(
@@ -76,7 +75,7 @@ router.post("/parse-invoice", upload.single("invoice"), async (req, res) => {
       res.status(400).json({ error: "Failed to parse JSON", raw: result });
     }
   } catch (err) {
-    res.status(500).json({ error: "Textract failed", details: err.message });
+    res.status(500).json({ error: "Parsing Error", details: err.message });
   }
 });
 
