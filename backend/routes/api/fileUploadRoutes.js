@@ -4,6 +4,7 @@ const multer = require("multer");
 const fs = require("fs");
 const axios = require("axios");
 const ExpenseModel = require("../../models/expense");
+const { generateTextractData } = require("../../utils/openai");
 const {
   TextractClient,
   AnalyzeDocumentCommand,
@@ -35,38 +36,7 @@ router.post("/parse-invoice", upload.single("invoice"), async (req, res) => {
       (b) => b.BlockType === "LINE"
     ).map((b) => b.Text);
 
-    const prompt = `
-    You are a JSON-only grocery receipt parser.
-    
-    From the receipt text below, extract each purchased item as an object with:
-    - item (string)
-    - quantity (integer)
-    - price (string with $)
-    
-    📌 IMPORTANT INSTRUCTIONS:
-    - DO NOT include explanation or intro text.
-    - DO NOT wrap the output in triple backticks (no markdown).
-    - DO NOT include comments or code samples.
-    - ONLY return a valid JSON array.
-    
-    Here is the receipt:
-    
-    ${lines.join("\n")}
-    
-    Respond only with:
-    [
-      { "item": "Item Name", "quantity": 1, "price": "$X.XX" },
-      ...
-    ]
-    `;
-
-    const llmResponse = await axios.post(process.env.MODEL_HOST_ID, {
-      model: "llama3",
-      prompt,
-      stream: false,
-    });
-
-    const result = llmResponse.data.response.trim();
+    const result = await generateTextractData(lines);
 
     try {
       const parsed = JSON.parse(result);
