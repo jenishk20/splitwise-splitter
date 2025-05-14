@@ -8,6 +8,7 @@ const {
   getCurrentUser,
 } = require("../../services/splitwiseService");
 const UserModel = require("../../models/user");
+const cookieOptions = require("../../utils/cookieOptions");
 
 router.get("/auth", (req, res) => {
   const url = getAuthURL();
@@ -19,19 +20,8 @@ router.get("/callback", async (req, res) => {
   const tokens = await getToken(code);
   const user = await getCurrentUser(tokens.access_token);
   const access_token = tokens.access_token;
-  res.cookie("access_token", access_token, {
-    maxAge: 24 * 60 * 60 * 1000,
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "none",
-  });
-
-  res.cookie("user_details", JSON.stringify(user), {
-    maxAge: 24 * 60 * 60 * 1000,
-    httpOnly: false,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "none",
-  });
+  res.cookie("access_token", access_token, cookieOptions.accessToken);
+  res.cookie("user_details", JSON.stringify(user), cookieOptions.userDetails);
 
   const { id, first_name, last_name, email } = user?.user;
   const userDetails = {
@@ -63,8 +53,8 @@ router.get("/me", async (req, res) => {
 });
 
 router.post("/logout", async (req, res) => {
-  res.clearCookie("access_token");
-  res.clearCookie("user_details");
+  res.clearCookie("access_token", cookieOptions.accessToken);
+  res.clearCookie("user_details", cookieOptions.userDetails);
   res.status(200).json({ success: true, message: "Logged out successfully" });
 });
 
