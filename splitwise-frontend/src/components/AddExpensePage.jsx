@@ -95,6 +95,7 @@ const AddExpensePage = ({ user, groups }) => {
     const payload = {
       group: group,
       items: items,
+      description: description,
     };
 
     try {

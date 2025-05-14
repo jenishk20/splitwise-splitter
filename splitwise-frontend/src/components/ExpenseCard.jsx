@@ -19,7 +19,7 @@ const ExpenseCard = ({
         onClick={() => onToggleExpand(expense._id)}
       >
         <span className="font-semibold">
-          Expense #{expense._id.slice(-4)} by {expense.userName}
+          Expense : {expense?.description} by {expense.userName}
         </span>
 
         <span>{expanded ? "▲" : "▼"}</span>
