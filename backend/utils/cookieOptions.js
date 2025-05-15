@@ -4,7 +4,7 @@ dotenv.config();
 const isProd = process.env.NODE_ENV === "production";
 
 const commonCookieSettings = {
-  sameSite: "none",
+  sameSite: "lax",
   secure: isProd,
   maxAge: 24 * 60 * 60 * 1000, // 1 day
 };

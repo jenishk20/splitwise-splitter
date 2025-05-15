@@ -4,3 +4,5 @@ package-lock.json
 splitwise-frontend/node_modules/*
 backend/uploads/*
 splitwise-frontend/dist/*
+app/node_modules/*
+app/.env*
