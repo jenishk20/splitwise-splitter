@@ -43,6 +43,7 @@ export const generateTextractData = async (lines) => {
       }
     );
     const data = await response.json();
+    console.log("Model Response:", data);
     return data.choices[0].message.content;
   } catch (error) {
     console.error("Error generating model data:", error);
