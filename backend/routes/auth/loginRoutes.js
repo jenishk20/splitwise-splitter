@@ -38,7 +38,7 @@ router.get("/callback", async (req, res) => {
     await UserModel.updateOne({ splitwiseId: id }, userDetails);
   }
   const frontendURL = process.env.FRONTEND_URL || "http://localhost:5173";
-  res.redirect(frontendURL);
+  res.redirect(`${frontendURL}/dashboard`);
 });
 
 router.get("/me", async (req, res) => {
