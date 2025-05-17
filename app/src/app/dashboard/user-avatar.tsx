@@ -39,7 +39,7 @@ export const UserAvatar = () => {
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
-				<Avatar className="cursor-pointer">
+				<Avatar className="cursor-pointer ring-primary/50 ring-2 rounded-full">
 					{userLoading ? (
 						<Skeleton className="w-10 h-10 rounded-full" />
 					) : user ? (

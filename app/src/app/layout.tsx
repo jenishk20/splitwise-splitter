@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Providers from "@/components/providers";
+import { DM_Sans } from "next/font/google";
+import Providers, { ThemeProvider } from "@/components/providers";
+import { Toaster } from "@/components/ui/sonner";
+
+const dmSans = DM_Sans({
+	weight: ["400", "500", "700"],
+	subsets: ["latin"],
+});
 
 export const metadata: Metadata = {
 	title: "Create Next App",
@@ -13,10 +20,19 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-		<Providers>
-			<html lang="en">
-				<body>{children}</body>
-			</html>
-		</Providers>
+		<html lang="en" suppressHydrationWarning>
+			<body className={dmSans.className}>
+				<Providers>
+					<ThemeProvider
+						attribute="class"
+						defaultTheme="dark"
+						disableTransitionOnChange
+					>
+						<Toaster richColors position="top-right" />
+						{children}
+					</ThemeProvider>
+				</Providers>
+			</body>
+		</html>
 	);
 }
