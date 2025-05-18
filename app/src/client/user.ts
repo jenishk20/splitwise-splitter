@@ -31,9 +31,10 @@ export const handleLogout = async () => {
 };
 
 
-export const handleFileUpload = async (file: File): Promise<void> => {
+export const handleFileUpload = async (file: File, groupId : any): Promise<void> => {
 	const formData = new FormData();
 	formData.append("invoice", file);
+	formData.append("groupId", groupId);
 
 	const response = await axios.post(`${BASE_API_URL}/upload/parse-invoice`, formData, {
 		withCredentials: true,

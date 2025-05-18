@@ -21,13 +21,13 @@ import { useDropzone } from "react-dropzone";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { handleFileUpload } from "@/client/user";
+import { group } from "console";
 
 export default function GroupPage() {
   const { id } = useParams();
   const { groups } = useUser();
 
   const group = groups?.find((group) => group.id === Number(id));
-
   return (
     <section className="w-full h-full px-4 sm:px-6 max-w-screen-lg mx-auto">
       <div className="mt-12 mb-6 flex items-center justify-between text-primary animate-fade-in">
@@ -81,6 +81,11 @@ const GroupMembersCard = ({ members }: { members: GroupMember[] }) => {
 };
 
 const GroupExpensesCard = () => {
+  const { id } = useParams();
+  const { groups } = useUser();
+
+  const group = groups?.find((group) => group.id === Number(id));
+
   const [csvFileState, setCsvFileState] = useState<{
     file: File | null;
     error: boolean;
@@ -221,7 +226,7 @@ const GroupExpensesCard = () => {
               return;
             }
             try {
-              await handleFileUpload(pictureFileState.file);
+              await handleFileUpload(pictureFileState.file, group?.id);
               toast.success("File uploaded successfully");
             } catch (err) {
               console.error(err);
