@@ -29,3 +29,20 @@ export const handleLogout = async () => {
 		console.error("Logout failed:", err);
 	}
 };
+
+
+export const handleFileUpload = async (file: File): Promise<void> => {
+	const formData = new FormData();
+	formData.append("invoice", file);
+
+	const response = await axios.post(`${BASE_API_URL}/upload/parse-invoice`, formData, {
+		withCredentials: true,
+		headers: {
+			"Content-Type": "multipart/form-data",
+		},
+	});
+
+	if (response.status !== 200) {
+		throw new Error("Failed to upload expense");
+	}
+};
