@@ -11,7 +11,7 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
-import { ArrowLeftIcon, ImageIcon, Table, TrashIcon, X } from "lucide-react";
+import { ArrowLeftIcon, ImageIcon, Table, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -21,6 +21,7 @@ import { useDropzone } from "react-dropzone";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { handleFileUpload } from "@/client/user";
+import Image from "next/image";
 
 export default function GroupPage() {
 	const { id } = useParams();
@@ -81,6 +82,11 @@ const GroupMembersCard = ({ members }: { members: GroupMember[] }) => {
 };
 
 const GroupExpensesCard = () => {
+	const { id } = useParams();
+	const { groups } = useUser();
+
+	const group = groups?.find((group) => group.id === Number(id));
+
 	const [csvFileState, setCsvFileState] = useState<{
 		file: File | null;
 		error: boolean;
@@ -116,7 +122,6 @@ const GroupExpensesCard = () => {
 	const {
 		getInputProps: getPictureInputProps,
 		getRootProps: getPictureRootProps,
-		open,
 	} = useDropzone({
 		onDrop: (acceptedFiles) => {
 			setPictureFileState({
@@ -198,7 +203,7 @@ const GroupExpensesCard = () => {
 					<TabsContent value="picture">
 						{pictureFileState?.file ? (
 							<div className="relative w-full h-full">
-								<img
+								<Image
 									src={URL.createObjectURL(pictureFileState.file)}
 									alt="Uploaded"
 									className="w-full h-full object-contain"
@@ -221,7 +226,7 @@ const GroupExpensesCard = () => {
 											return;
 										}
 										try {
-											await handleFileUpload(pictureFileState.file);
+											await handleFileUpload(pictureFileState.file, group?.id);
 											toast.success("File uploaded successfully");
 										} catch (err) {
 											console.error(err);

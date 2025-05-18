@@ -25,7 +25,6 @@ const uploadToS3 = async (localFilePath, jobId) => {
     await s3.putObject(params).promise();
     console.log(`✅ Uploaded to S3 as ${s3Key}`);
   } catch (err) {
-    console.error(`❌ Failed to upload to S3: ${err.message}`);
     throw new Error(`Failed to upload to S3: ${err.message}`);
   }
 };
