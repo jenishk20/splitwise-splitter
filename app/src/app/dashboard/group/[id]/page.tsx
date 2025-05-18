@@ -11,7 +11,7 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
-import { ArrowLeftIcon, ImageIcon, Table, X } from "lucide-react";
+import { ArrowLeftIcon, ImageIcon, Loader2, Table, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -22,6 +22,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { handleFileUpload } from "@/client/user";
 import Image from "next/image";
+import { useMutation } from "@tanstack/react-query";
 
 export default function GroupPage() {
 	const { id } = useParams();
@@ -97,6 +98,8 @@ const GroupExpensesCard = () => {
 		error: boolean;
 	} | null>(null);
 
+	const [isUploading, setIsUploading] = useState(false);
+
 	const { getInputProps: getCsvInputProps, getRootProps: getCsvRootProps } =
 		useDropzone({
 			accept: {
@@ -166,6 +169,26 @@ const GroupExpensesCard = () => {
 		}, 2000);
 	}, [pictureFileState]);
 
+	const handleUploadMutation = useMutation({
+		mutationFn: async (file: File) => {
+			return handleFileUpload(file, group?.id);
+		},
+		onMutate: () => {
+			setIsUploading(true);
+		},
+		onSettled: () => {
+			setIsUploading(false);
+		},
+		onSuccess: () => {
+			toast.success("File uploaded successfully");
+		},
+		onError: (error) => {
+			toast.error("Upload failed", {
+				description: (error as Error).message,
+			});
+		},
+	});
+
 	return (
 		<Card className="col-span-2">
 			<CardHeader>
@@ -207,6 +230,8 @@ const GroupExpensesCard = () => {
 									src={URL.createObjectURL(pictureFileState.file)}
 									alt="Uploaded"
 									className="w-full h-full object-contain"
+									width={1000}
+									height={1000}
 								/>
 								<Button
 									variant="destructive"
@@ -220,23 +245,20 @@ const GroupExpensesCard = () => {
 								</Button>
 								<Button
 									className="absolute bottom-2 right-2"
-									onClick={async () => {
+									disabled={isUploading}
+									onClick={() => {
 										if (!pictureFileState?.file) {
 											toast.error("No image selected");
 											return;
 										}
-										try {
-											await handleFileUpload(pictureFileState.file, group?.id);
-											toast.success("File uploaded successfully");
-										} catch (err) {
-											console.error(err);
-											toast.error("Upload failed", {
-												description: (err as Error).message,
-											});
-										}
+										handleUploadMutation.mutate(pictureFileState.file);
 									}}
 								>
-									Upload Image
+									{isUploading ? (
+										<Loader2 className="w-4 h-4 animate-spin" />
+									) : (
+										"Upload Image"
+									)}
 								</Button>
 							</div>
 						) : (
