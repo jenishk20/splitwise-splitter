@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const multer = require("multer");
-const fs = require("fs");
+const fs = require("node:fs");
 const axios = require("axios");
 const ExpenseModel = require("../../models/expense");
 const { generateTextractData } = require("../../utils/openai");
@@ -12,7 +12,8 @@ const {
 const AWS = require("aws-sdk");
 const { v4: uuidv4 } = require("uuid");
 const uploadToS3 = require("../../services/uploadToS3");
-
+const JobModel = require("../../models/job");
+const UserModel = require("../../models/user");
 const upload = multer({ dest: "uploads/" });
 const textract = new TextractClient({
   region: "us-east-1",
@@ -24,15 +25,20 @@ const textract = new TextractClient({
 
 router.post("/parse-invoice", upload.single("invoice"), async (req, res) => {
   try {
-    const fileBytes = fs.readFileSync(req.file.path);
-    const jobId = uuidv4();
-    console.log("Job ID:", jobId);
-    console.log("File Path:", req.file.path);
-    await uploadToS3(req.file.path, jobId);
-    console.log("Uploaded to S3");
-    fs.unlinkSync(req.file.path);
+    // const fileBytes = fs.readFileSync(req.file.path);
+    const user = await UserModel.findOne({
+      splitwiseId: req.user.user_details.user.id,
+    });
+    const job = await JobModel.create({
+      status: "UPLOADING",
+      userId: user._id,
+    });
+    await uploadToS3(req.file.path, job._id);
+    res.json({
+      jobId: job._id,
+      userId: job.userId,
+    });
 
-    
     // const command = new AnalyzeDocumentCommand({
     //   Document: {
     //     Bytes: fileBytes,
