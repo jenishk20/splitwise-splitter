@@ -46,4 +46,14 @@ router.post("/parse-invoice", upload.single("invoice"), async (req, res) => {
   }
 });
 
+router.get("/get-job", async (req, res) => {
+  try {
+    const { jobId } = req.query;
+    const job = await InvoiceJobModel.findOne({ jobId });
+    res.status(200).json(job);
+  } catch (err) {
+    res.status(500).json({ error: "Get Job Error", details: err.message });
+  }
+});
+
 module.exports = router;

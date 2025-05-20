@@ -16,15 +16,16 @@ export const generateTextractData = async (lines) => {
           You are a JSON-only grocery receipt parser.
           
           From the receipt text below, extract each purchased item as an object with:
-          - item (string)
-          - quantity (integer)
-          - price (string with $)
+          - item (string, default to empty string if missing)
+          - quantity (integer, default to 1 if missing)
+          - price (string with $, default to "$0.00" if missing)
           
           IMPORTANT INSTRUCTIONS:
           - DO NOT include explanation or intro text.
           - DO NOT wrap the output in triple backticks (no markdown).
-      - DO NOT include comments or code samples.
-      - ONLY return a valid JSON array.
+          - DO NOT include comments or code samples.
+          - ONLY return a valid JSON array.
+          - For any missing fields, use the default values specified above.
   
       Respond only with:
       [
