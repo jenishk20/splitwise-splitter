@@ -61,3 +61,28 @@ export const getGroupJobs = async (groupId: string): Promise<any[]> => {
 	}
 };
 
+export const submitExpenseToGroup = async (
+	group: Group,
+	items: any[],
+	description: string
+): Promise<string> => {
+
+	try{
+		const response = await axios.post(
+			`${BASE_API_URL}/expenses/submit-expense`,
+			{
+				group,
+				items,
+				description,
+			},
+			{
+				withCredentials: true,
+			}
+		);
+		return response.data;
+	}
+	catch (error) {
+		console.error("Error submitting expense:", error);
+		throw new Error("Failed to submit expense");
+	}
+};

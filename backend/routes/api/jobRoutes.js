@@ -82,4 +82,26 @@ router.get("/get-jobs/:groupId", async (req, res) => {
   }
 });
 
+router.post("/delete-job/:jobId", async (req, res) => {
+  const { jobId } = req.params;
+  const userId = req.user.user_details.user.id;
+  try {
+    const job = await InvoiceJobModel.findById(jobId);
+    if (!job) {
+      return res.status(404).json({ error: "Job not found" });
+    }
+    if (String(userId) !== String(job.userId)) {
+      return res
+        .status(403)
+        .json({ error: "You are not authorized to delete this job" });
+    }
+    await InvoiceJobModel.deleteOne({ _id: jobId });
+    res.json({ success: true, message: "Job deleted successfully" });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ error: "Failed to delete job", details: err.message });
+  }
+});
+
 module.exports = router;
