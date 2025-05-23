@@ -33,8 +33,7 @@ import { handleFileUpload } from "@/client/user";
 import Image from "next/image";
 import { useMutation } from "@tanstack/react-query";
 import { CompletedJobs } from "./completed-jobs";
-
-type NavigationItem = "home" | "expenses" | "invoices";
+import { type NavigationItem, useGroup } from "./group-provider";
 
 interface Group {
 	id: number;
@@ -45,29 +44,29 @@ interface Group {
 export default function GroupPage() {
 	const { id } = useParams();
 	const { groups } = useUser();
-	const [activeItem, setActiveItem] = useState<NavigationItem>("home");
+	const { activeElement, setActiveElement } = useGroup();
 
 	const group = groups?.find((group) => group.id === Number(id));
 
 	return (
-		<div className="flex justify-center w-full h-screen">
-			<Sidebar activeItem={activeItem} onSelect={setActiveItem} />
+		<div className="flex flex-col lg:flex-row w-full min-h-screen">
+			<Sidebar activeItem={activeElement} onSelect={setActiveElement} />
 			<div className="flex-1 w-full">
 				<section className="w-full h-full px-4 sm:px-6 max-w-screen-lg mx-auto">
-					<div className="pt-12 flex items-center justify-between text-primary animate-fade-in">
+					<div className="pt-6 lg:pt-12 flex items-center justify-between text-primary animate-fade-in">
 						<div className="flex items-center gap-4">
 							<Button variant="outline" size="icon" asChild>
 								<Link href="/dashboard">
 									<ArrowLeftIcon className="w-4 h-4" />
 								</Link>
 							</Button>
-							<h1 className="text-3xl font-bold">{group?.name}</h1>
+							<h1 className="text-2xl lg:text-3xl font-bold">{group?.name}</h1>
 						</div>
 					</div>
-					<Separator className="my-6" />
-					{activeItem === "home" && <HomeContent group={group} />}
-					{activeItem === "expenses" && <ExpensesContent />}
-					{activeItem === "invoices" && (
+					<Separator className="my-4 lg:my-6" />
+					{activeElement === "home" && <HomeContent group={group} />}
+					{activeElement === "expenses" && <ExpensesContent />}
+					{activeElement === "invoices" && (
 						<CompletedJobs groupId={Number(id)} />
 					)}
 				</section>
@@ -83,7 +82,7 @@ const GroupMembersCard = ({ members }: { members: GroupMember[] }) => {
 				<CardTitle>Members</CardTitle>
 			</CardHeader>
 			<CardContent>
-				<ScrollArea className="h-[600px]">
+				<ScrollArea className="h-[300px] lg:h-[600px]">
 					<ul className="space-y-4">
 						{members.map((member) => (
 							<li key={member.id}>
@@ -110,7 +109,7 @@ const GroupMembersCard = ({ members }: { members: GroupMember[] }) => {
 const GroupExpensesCard = () => {
 	const { id } = useParams();
 	const { groups } = useUser();
-
+	const { setActiveElement } = useGroup();
 	const group = groups?.find((group) => group.id === Number(id));
 
 	const [csvFileState, setCsvFileState] = useState<{
@@ -205,6 +204,7 @@ const GroupExpensesCard = () => {
 			setIsUploading(false);
 		},
 		onSuccess: () => {
+			setActiveElement("invoices");
 			toast.success("File uploaded successfully");
 		},
 		onError: (error) => {
@@ -324,32 +324,32 @@ const Sidebar = ({
 	onSelect: (item: NavigationItem) => void;
 }) => {
 	return (
-		<div className="w-64 pt-12 h-full flex items-start">
-			<div className="w-full bg-background rounded-lg border shadow-sm p-4 mx-4">
-				<nav className="space-y-2">
+		<div className="w-full lg:w-64 lg:pt-12 h-auto lg:h-screen flex items-center lg:items-start border-b lg:border-b-0 lg:border-r">
+			<div className="w-full lg:w-auto bg-background lg:rounded-lg lg:border lg:shadow-sm p-4 mx-4">
+				<nav className="flex lg:flex-col space-x-2 lg:space-x-0 lg:space-y-2">
 					<Button
 						variant={activeItem === "home" ? "secondary" : "ghost"}
-						className="w-full justify-start"
+						className="flex-1 lg:flex-none lg:w-full justify-start"
 						onClick={() => onSelect("home")}
 					>
 						<Home className="mr-2 h-4 w-4" />
-						Home
+						<span className="sm:inline">Home</span>
 					</Button>
 					<Button
 						variant={activeItem === "expenses" ? "secondary" : "ghost"}
-						className="w-full justify-start"
+						className="flex-1 lg:flex-none lg:w-full justify-start"
 						onClick={() => onSelect("expenses")}
 					>
 						<Receipt className="mr-2 h-4 w-4" />
-						Expenses
+						<span className="sm:inline">Expenses</span>
 					</Button>
 					<Button
 						variant={activeItem === "invoices" ? "secondary" : "ghost"}
-						className="w-full justify-start"
+						className="flex-1 lg:flex-none lg:w-full justify-start"
 						onClick={() => onSelect("invoices")}
 					>
 						<FileText className="mr-2 h-4 w-4" />
-						Invoices
+						<span className="sm:inline">Invoices</span>
 					</Button>
 				</nav>
 			</div>
@@ -359,19 +359,16 @@ const Sidebar = ({
 
 const HomeContent = ({ group }: { group: Group | undefined }) => {
 	return (
-		<>
-			<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-				<GroupMembersCard members={group?.members ?? []} />
-				<GroupExpensesCard />
-			</div>
-			<Separator className="my-6" />
-		</>
+		<div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+			<GroupMembersCard members={group?.members ?? []} />
+			<GroupExpensesCard />
+		</div>
 	);
 };
 
 const ExpensesContent = () => {
 	return (
-		<div className="flex items-center justify-center h-[calc(100vh-200px)]">
+		<div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
 			<Card className="w-full max-w-md">
 				<CardHeader>
 					<CardTitle>Expenses</CardTitle>
