@@ -72,13 +72,36 @@ router.get("/", async (req, res) => {
   res.json(jobs);
 });
 
-router.get("/:jobId", async (req, res) => {
-  const { jobId } = req.params;
-  const job = await InvoiceJobModel.findOne({ jobId });
-  if (!job) {
-    return res.status(404).json({ error: "Job not found" });
+router.get("/get-jobs/:groupId", async (req, res) => {
+  try {
+    const { groupId } = req.params;
+    const jobs = await InvoiceJobModel.findOne({ groupId });
+    res.status(200).json(jobs);
+  } catch (err) {
+    res.status(500).json({ error: "Get Job Error", details: err.message });
   }
-  res.json(job);
+});
+
+router.post("/delete-job/:jobId", async (req, res) => {
+  const { jobId } = req.params;
+  const userId = req.user.user_details.user.id;
+  try {
+    const job = await InvoiceJobModel.findById(jobId);
+    if (!job) {
+      return res.status(404).json({ error: "Job not found" });
+    }
+    if (String(userId) !== String(job.userId)) {
+      return res
+        .status(403)
+        .json({ error: "You are not authorized to delete this job" });
+    }
+    await InvoiceJobModel.deleteOne({ _id: jobId });
+    res.json({ success: true, message: "Job deleted successfully" });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ error: "Failed to delete job", details: err.message });
+  }
 });
 
 module.exports = router;

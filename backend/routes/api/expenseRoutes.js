@@ -142,4 +142,27 @@ router.post("/finalize/:expenseId", async (req, res) => {
   }
 });
 
+router.post("/delete/:expenseId", async (req, res) => {
+  const { expenseId } = req.params;
+  const userId = req.user.user_details.user.id;
+  try {
+    const expense = await ExpenseModel.findById(expenseId);
+    if (!expense) {
+      return res.status(404).json({ error: "Expense not found" });
+    }
+    if (String(userId) !== String(expense.userId)) {
+      return res
+        .status(403)
+        .json({ error: "You are not authorized to delete this expense" });
+    }
+
+    await ExpenseModel.deleteOne({ _id: expenseId });
+    res.json({ message: "Expense deleted successfully" });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ error: "Failed to delete expense", details: err.message });
+  }
+});
+
 module.exports = router;

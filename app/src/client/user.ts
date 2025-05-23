@@ -53,3 +53,42 @@ export const handleFileUpload = async (
 		throw new Error("Failed to upload expense");
 	}
 };
+
+export const getGroupJobs = async (groupId: string): Promise<any[]> => {
+	try{
+		const response = await axios.get(`${BASE_API_URL}/jobs/get-jobs/${groupId}`, {
+			withCredentials: true,
+		});
+		return response.data?.jobs || [];
+	}
+	catch (error) {
+		console.error("Error fetching group jobs:", error);
+		throw new Error("Failed to fetch group jobs");
+	}
+};
+
+export const submitExpenseToGroup = async (
+	group: Group,
+	items: any[],
+	description: string
+): Promise<string> => {
+
+	try{
+		const response = await axios.post(
+			`${BASE_API_URL}/expenses/submit-expense`,
+			{
+				group,
+				items,
+				description,
+			},
+			{
+				withCredentials: true,
+			}
+		);
+		return response.data;
+	}
+	catch (error) {
+		console.error("Error submitting expense:", error);
+		throw new Error("Failed to submit expense");
+	}
+};
