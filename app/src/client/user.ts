@@ -30,18 +30,24 @@ export const handleLogout = async () => {
 	}
 };
 
-
-export const handleFileUpload = async (file: File, groupId : any): Promise<void> => {
+export const handleFileUpload = async (
+	file: File,
+	groupId: number,
+): Promise<void> => {
 	const formData = new FormData();
 	formData.append("invoice", file);
-	formData.append("groupId", groupId);
+	formData.append("groupId", groupId.toString());
 
-	const response = await axios.post(`${BASE_API_URL}/upload/parse-invoice`, formData, {
-		withCredentials: true,
-		headers: {
-			"Content-Type": "multipart/form-data",
+	const response = await axios.post(
+		`${BASE_API_URL}/upload/parse-invoice`,
+		formData,
+		{
+			withCredentials: true,
+			headers: {
+				"Content-Type": "multipart/form-data",
+			},
 		},
-	});
+	);
 
 	if (response.status !== 200) {
 		throw new Error("Failed to upload expense");

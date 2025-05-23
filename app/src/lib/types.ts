@@ -87,3 +87,20 @@ export interface Group {
 	custom_avatar: boolean;
 	cover_photo: GroupCoverPhoto;
 }
+
+export interface InvoiceJob {
+	jobId: string;
+	groupId: string;
+	userId: string;
+	status: string;
+	parsedResult: object | null;
+	error: string | null;
+	createdAt: Date;
+	updatedAt: Date;
+}
+
+export interface InvoiceItem {
+	item: string;
+	quantity: number;
+	price: number;
+}

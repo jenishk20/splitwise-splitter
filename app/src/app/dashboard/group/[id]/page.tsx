@@ -11,7 +11,16 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
-import { ArrowLeftIcon, ImageIcon, Loader2, Table, X } from "lucide-react";
+import {
+	ArrowLeftIcon,
+	ImageIcon,
+	Loader2,
+	Table,
+	X,
+	Home,
+	Receipt,
+	FileText,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -23,31 +32,47 @@ import { toast } from "sonner";
 import { handleFileUpload } from "@/client/user";
 import Image from "next/image";
 import { useMutation } from "@tanstack/react-query";
+import { CompletedJobs } from "./completed-jobs";
+
+type NavigationItem = "home" | "expenses" | "invoices";
+
+interface Group {
+	id: number;
+	name: string;
+	members: GroupMember[];
+}
 
 export default function GroupPage() {
 	const { id } = useParams();
 	const { groups } = useUser();
+	const [activeItem, setActiveItem] = useState<NavigationItem>("home");
 
 	const group = groups?.find((group) => group.id === Number(id));
 
 	return (
-		<section className="w-full h-full px-4 sm:px-6 max-w-screen-lg mx-auto">
-			<div className="mt-12 mb-6 flex items-center justify-between text-primary animate-fade-in">
-				<div className="flex items-center gap-4">
-					<Button variant="outline" size="icon" asChild>
-						<Link href="/dashboard">
-							<ArrowLeftIcon className="w-4 h-4" />
-						</Link>
-					</Button>
-					<h1 className="text-3xl font-bold">{group?.name}</h1>
-				</div>
+		<div className="flex justify-center w-full h-screen">
+			<Sidebar activeItem={activeItem} onSelect={setActiveItem} />
+			<div className="flex-1 w-full">
+				<section className="w-full h-full px-4 sm:px-6 max-w-screen-lg mx-auto">
+					<div className="pt-12 flex items-center justify-between text-primary animate-fade-in">
+						<div className="flex items-center gap-4">
+							<Button variant="outline" size="icon" asChild>
+								<Link href="/dashboard">
+									<ArrowLeftIcon className="w-4 h-4" />
+								</Link>
+							</Button>
+							<h1 className="text-3xl font-bold">{group?.name}</h1>
+						</div>
+					</div>
+					<Separator className="my-6" />
+					{activeItem === "home" && <HomeContent group={group} />}
+					{activeItem === "expenses" && <ExpensesContent />}
+					{activeItem === "invoices" && (
+						<CompletedJobs groupId={Number(id)} />
+					)}
+				</section>
 			</div>
-			<Separator className="my-6" />
-			<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-				<GroupMembersCard members={group?.members ?? []} />
-				<GroupExpensesCard />
-			</div>
-		</section>
+		</div>
 	);
 }
 
@@ -171,7 +196,7 @@ const GroupExpensesCard = () => {
 
 	const handleUploadMutation = useMutation({
 		mutationFn: async (file: File) => {
-			return handleFileUpload(file, group?.id);
+			return handleFileUpload(file, group?.id ?? 0);
 		},
 		onMutate: () => {
 			setIsUploading(true);
@@ -223,9 +248,9 @@ const GroupExpensesCard = () => {
 							<input {...getCsvInputProps()} />
 						</div>
 					</TabsContent>
-					<TabsContent value="picture">
+					<TabsContent value="picture" className="h-full">
 						{pictureFileState?.file ? (
-							<div className="relative w-full h-full">
+							<ScrollArea className="relative w-full h-[500px]">
 								<Image
 									src={URL.createObjectURL(pictureFileState.file)}
 									alt="Uploaded"
@@ -260,7 +285,7 @@ const GroupExpensesCard = () => {
 										"Upload Image"
 									)}
 								</Button>
-							</div>
+							</ScrollArea>
 						) : (
 							<div
 								{...getPictureRootProps()}
@@ -288,5 +313,73 @@ const GroupExpensesCard = () => {
 				</p>
 			</CardFooter>
 		</Card>
+	);
+};
+
+const Sidebar = ({
+	activeItem,
+	onSelect,
+}: {
+	activeItem: NavigationItem;
+	onSelect: (item: NavigationItem) => void;
+}) => {
+	return (
+		<div className="w-64 pt-12 h-full flex items-start">
+			<div className="w-full bg-background rounded-lg border shadow-sm p-4 mx-4">
+				<nav className="space-y-2">
+					<Button
+						variant={activeItem === "home" ? "secondary" : "ghost"}
+						className="w-full justify-start"
+						onClick={() => onSelect("home")}
+					>
+						<Home className="mr-2 h-4 w-4" />
+						Home
+					</Button>
+					<Button
+						variant={activeItem === "expenses" ? "secondary" : "ghost"}
+						className="w-full justify-start"
+						onClick={() => onSelect("expenses")}
+					>
+						<Receipt className="mr-2 h-4 w-4" />
+						Expenses
+					</Button>
+					<Button
+						variant={activeItem === "invoices" ? "secondary" : "ghost"}
+						className="w-full justify-start"
+						onClick={() => onSelect("invoices")}
+					>
+						<FileText className="mr-2 h-4 w-4" />
+						Invoices
+					</Button>
+				</nav>
+			</div>
+		</div>
+	);
+};
+
+const HomeContent = ({ group }: { group: Group | undefined }) => {
+	return (
+		<>
+			<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+				<GroupMembersCard members={group?.members ?? []} />
+				<GroupExpensesCard />
+			</div>
+			<Separator className="my-6" />
+		</>
+	);
+};
+
+const ExpensesContent = () => {
+	return (
+		<div className="flex items-center justify-center h-[calc(100vh-200px)]">
+			<Card className="w-full max-w-md">
+				<CardHeader>
+					<CardTitle>Expenses</CardTitle>
+				</CardHeader>
+				<CardContent>
+					<p className="text-muted-foreground">No expenses yet.</p>
+				</CardContent>
+			</Card>
+		</div>
 	);
 };
