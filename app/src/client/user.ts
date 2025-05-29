@@ -92,3 +92,15 @@ export const submitExpenseToGroup = async (
 		throw new Error("Failed to submit expense");
 	}
 };
+
+export const getPendingExpenses = async (groupId : string) : Promise<any[]> => {
+	try {
+		const response = await axios.get(`${BASE_API_URL}/expenses/get-expenses/${groupId}`, {
+			withCredentials: true,
+		});
+		return response.data || [];
+	} catch (error) {
+		console.error("Error fetching pending expenses:", error);
+		throw new Error("Failed to fetch pending expenses");
+	}
+}
