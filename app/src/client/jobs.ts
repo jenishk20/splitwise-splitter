@@ -4,7 +4,7 @@ import axios from "axios";
 
 export const getCompletedJobs = async (groupId: number) => {
 	const response = await axios.get<InvoiceJob[]>(
-		`${BASE_API_URL}/jobs?groupId=${groupId}`,
+		`${BASE_API_URL}/jobs/get-jobs/${groupId}`,
 		{
 			withCredentials: true,
 		},

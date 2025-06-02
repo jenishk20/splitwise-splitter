@@ -70,7 +70,8 @@ export const getGroupJobs = async (groupId: string): Promise<any[]> => {
 export const submitExpenseToGroup = async (
 	group: Group,
 	items: any[],
-	description: string
+	description: string,
+	jobId : string
 ): Promise<string> => {
 
 	try{
@@ -80,6 +81,7 @@ export const submitExpenseToGroup = async (
 				group,
 				items,
 				description,
+				jobId,
 			},
 			{
 				withCredentials: true,
@@ -104,3 +106,45 @@ export const getPendingExpenses = async (groupId : string) : Promise<any[]> => {
 		throw new Error("Failed to fetch pending expenses");
 	}
 }
+
+
+export const deleteExpense = async (expenseId: string): Promise<void> => {
+	try {
+		const response = await axios.post(`${BASE_API_URL}/expenses/delete/${expenseId}`, {},{
+			withCredentials: true,
+		});
+	
+	} catch (error) {
+		console.error("Error deleting expense:", error);
+		throw new Error("Failed to delete expense");
+	}
+}
+
+export const updateExpensePreferences = async (
+	expenseId: string,
+	items: any[]
+): Promise<void> => {
+	try {
+		await axios.post(
+			`${BASE_API_URL}/expenses/update-preferences/${expenseId}`,
+			{ items },
+			{ withCredentials: true }
+		);
+	} catch (error) {
+		console.error("Error updating preferences:", error);
+		throw new Error("Failed to update preferences");
+	}
+};
+
+export const finalizeExpenseOnSplitwise = async (expenseId: string): Promise<void> => {
+	try {
+		const response = await axios.post(
+			`${BASE_API_URL}/expenses/finalize/${expenseId}`,
+			{},
+			{ withCredentials: true }
+		);
+	} catch (error: any) {
+		console.error("Error finalizing expense:", error);
+		throw new Error(error.response?.data?.message || "Finalize failed");
+	}
+};

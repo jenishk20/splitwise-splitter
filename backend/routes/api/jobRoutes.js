@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const InvoiceJobModel = require("../../models/invoicejob");
-
+const ExpenseModel = require("../../models/expense");
 router.get("/stream", async (req, res) => {
   const { groupId } = req.query;
   const userSplitWiseId = req?.user?.user_details?.user?.id;
@@ -75,7 +75,17 @@ router.get("/", async (req, res) => {
 router.get("/get-jobs/:groupId", async (req, res) => {
   try {
     const { groupId } = req.params;
-    const jobs = await InvoiceJobModel.findOne({ groupId });
+    const submittedJobIds = await ExpenseModel.distinct("jobId", {
+      groupId,
+      jobId: { $ne: null },
+    });
+    console.log("Submitted Job IDs:", submittedJobIds);
+    const jobs = await InvoiceJobModel.find({
+      groupId,
+      _id: { $nin: submittedJobIds },
+    }).sort({ createdAt: -1 });
+
+    // const jobs = await InvoiceJobModel.findOne({ groupId });
     res.status(200).json(jobs);
   } catch (err) {
     res.status(500).json({ error: "Get Job Error", details: err.message });

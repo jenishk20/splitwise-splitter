@@ -79,10 +79,8 @@ const postToSplitwise = async (
     );
 
     const data = await response.json();
-    console.log("Splitwise API response:", data);
     return data;
   } catch (error) {
-    console.error("Splitwise API error:", error);
     throw error;
   }
 };

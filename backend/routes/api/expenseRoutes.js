@@ -17,7 +17,7 @@ router.get("/get-expenses/:groupId", async (req, res) => {
 });
 
 router.post("/submit-expense", async (req, res) => {
-  const { group, items, description } = req.body;
+  const { group, items, description, jobId } = req.body;
   const userSplitWiseId = req?.user?.user_details?.user?.id;
   const userName = req?.user?.user_details?.user?.first_name;
   try {
@@ -47,6 +47,7 @@ router.post("/submit-expense", async (req, res) => {
       userId: userSplitWiseId,
       userName: userName,
       description: description,
+      jobId: jobId || null,
     };
     const expenses = new ExpenseModel(data);
     await expenses.save();

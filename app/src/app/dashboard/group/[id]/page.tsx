@@ -34,15 +34,9 @@ import Image from "next/image";
 import { useMutation } from "@tanstack/react-query";
 import { CompletedJobs } from "./completed-jobs";
 import { type NavigationItem, useGroup } from "./group-provider";
-import { CardDescription } from "@/components/ui/card";
-import {
-  TableHeader,
-  TableCell,
-  TableHead,
-  TableBody,
-  TableRow,
-} from "@/components/ui/table";
-import { Checkbox } from "@/components/ui/checkbox";
+import { ExpenseCard } from "./expense-card";
+import { Accordion } from "@radix-ui/react-accordion";
+
 interface Group {
   id: number;
   name: string;
@@ -70,9 +64,9 @@ export default function GroupPage() {
     fetchPendingExpenses();
   }, []);
 
-  console.log("Group:", group);
-  console.log("Active Element:", activeElement);
-  console.log("Expenses:", expenses);
+  // console.log("Group:", group);
+  // console.log("Active Element:", activeElement);
+  // console.log("Expenses:", expenses);
 
   return (
     <div className="flex flex-col lg:flex-row w-full min-h-screen">
@@ -92,7 +86,10 @@ export default function GroupPage() {
           <Separator className="my-4 lg:my-6" />
           {activeElement === "home" && <HomeContent group={group} />}
           {activeElement === "expenses" && (
-            <ExpensesContent expenses={expenses} />
+            <ExpensesContent
+              expenses={expenses}
+              refreshExpenses={fetchPendingExpenses}
+            />
           )}
           {activeElement === "invoices" && (
             <CompletedJobs groupId={Number(id)} />
@@ -409,51 +406,34 @@ const HomeContent = ({ group }: { group: Group | undefined }) => {
 //   );
 // };
 
-const ExpensesContent = ({ expenses }: { expenses: any[] }) => {
-  const { user } = useUser(); // to show finalize button for creator only
+const ExpensesContent = ({
+  expenses,
+  refreshExpenses,
+}: {
+  expenses: any[];
+  refreshExpenses: () => void;
+}) => {
+  const { groups } = useUser();
+  const { id } = useParams();
+  const group = groups?.find((g) => g.id === Number(id));
+
   return (
-    <div className="space-y-6">
+    <Accordion type="multiple" className="w-full space-y-4">
       {expenses.length === 0 ? (
         <div className="text-muted-foreground text-center py-8">
           No pending expenses yet.
         </div>
       ) : (
         expenses.map((expense, idx) => (
-          <Card key={expense._id}>
-            <CardHeader>
-              <CardTitle>{`Expense ${idx + 1}`}</CardTitle>
-              <CardDescription>{expense.description}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Item</TableHead>
-                    <TableHead>Quantity</TableHead>
-                    <TableHead>Price</TableHead>
-                    <TableHead>Your Participation</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {expense.items.map((item: any, i: number) => (
-                    <TableRow key={i}>
-                      <TableCell>{item.item}</TableCell>
-                      <TableCell>{item.quantity}</TableCell>
-                      <TableCell>{item.price}</TableCell>
-                      <TableCell>
-                        <Checkbox />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-            <CardFooter className="flex justify-end gap-2">
-              {expense.createdBy === user?.id && <Button>Finalize</Button>}
-            </CardFooter>
-          </Card>
+          <ExpenseCard
+            key={expense._id}
+            expense={expense}
+            index={idx}
+            groupMembers={group?.members || []}
+            refreshExpenses={refreshExpenses}
+          />
         ))
       )}
-    </div>
+    </Accordion>
   );
 };

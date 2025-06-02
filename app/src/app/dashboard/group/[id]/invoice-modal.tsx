@@ -48,7 +48,7 @@ export const InvoiceModal = ({
   const handleSubmitExpense = async () => {
     try {
       if (!group) throw new Error("Group not found");
-      await submitExpenseToGroup(group, parsedResult, description);
+      await submitExpenseToGroup(group, parsedResult, description, job?._id);
       toast.success("Expense submitted to the group!");
       setActiveElement("expenses");
     } catch (err) {

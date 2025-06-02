@@ -10,11 +10,14 @@ const expenseSchema = new Schema(
     },
     description: {
       type: String,
-      required: true,
     },
     userId: {
       type: String,
       required: true,
+    },
+    jobId: {
+      type: String,
+      unique: true,
     },
     userName: {
       type: String,
