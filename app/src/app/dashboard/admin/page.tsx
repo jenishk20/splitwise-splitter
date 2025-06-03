@@ -25,6 +25,7 @@ import {
 import { useUser } from "@/hooks/use-user";
 import { redirect } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import { BugReports } from "./bug-reports";
 
 // Register ChartJS components
 ChartJS.register(
@@ -154,60 +155,64 @@ export default function AdminDashboard() {
         </Card>
       </div>
 
-      <Tabs defaultValue="visits" className="w-full">
+      <Tabs defaultValue="analytics" className="w-full">
         <TabsList>
-          <TabsTrigger value="visits">Site Visits</TabsTrigger>
-          <TabsTrigger value="logins">User Logins</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          <TabsTrigger value="bug-reports">Bug Reports</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="visits">
-          <Card>
-            <CardHeader>
-              <CardTitle>Site Visits Over Time</CardTitle>
-              <CardDescription>Daily site visit statistics</CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <div className="h-[400px]">
-                <Line
-                  data={statsData.visitsData}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                      legend: {
-                        position: "top" as const,
+        <TabsContent value="analytics">
+          <div className="grid grid-cols-1 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Site Visits Over Time</CardTitle>
+                <CardDescription>Daily site visit statistics</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <div className="h-[400px]">
+                  <Line
+                    data={statsData.visitsData}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: {
+                          position: "top" as const,
+                        },
                       },
-                    },
-                  }}
-                />
-              </div>
-            </CardContent>
-          </Card>
+                    }}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>User Logins</CardTitle>
+                <CardDescription>Daily user login statistics</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <div className="h-[400px]">
+                  <Bar
+                    data={statsData.loginsData}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: {
+                          position: "top" as const,
+                        },
+                      },
+                    }}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
-        <TabsContent value="logins">
-          <Card>
-            <CardHeader>
-              <CardTitle>User Logins</CardTitle>
-              <CardDescription>Daily user login statistics</CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <div className="h-[400px]">
-                <Bar
-                  data={statsData.loginsData}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                      legend: {
-                        position: "top" as const,
-                      },
-                    },
-                  }}
-                />
-              </div>
-            </CardContent>
-          </Card>
+        <TabsContent value="bug-reports">
+          <BugReports />
         </TabsContent>
       </Tabs>
     </div>
