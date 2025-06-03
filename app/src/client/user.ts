@@ -148,3 +148,13 @@ export const finalizeExpenseOnSplitwise = async (expenseId: string): Promise<voi
 		throw new Error(error.response?.data?.message || "Finalize failed");
 	}
 };
+
+
+export const reportBug = async (bugReport: BugReport): Promise<void> => {
+	try {
+		await axios.post(`${BASE_API_URL}/bug-reports`, bugReport, { withCredentials: true });
+	} catch (error) {
+		console.error("Error reporting bug:", error);
+		throw new Error("Failed to report bug");
+	}
+};

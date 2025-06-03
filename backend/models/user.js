@@ -25,6 +25,10 @@ const userSchema = new Schema(
       type: [Schema.Types.ObjectId],
       ref: "Job",
     },
+    isAdmin: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { reportBug } from "@/client/user";
 
 interface BugReportFormProps {
   onSubmitSuccess?: () => void;
@@ -50,18 +51,7 @@ export function BugReportForm({ onSubmitSuccess }: BugReportFormProps) {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/bug-reports", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to submit bug report");
-      }
-
+      await reportBug(formData);
       toast.success("Bug report submitted successfully");
       setFormData({
         type: "",

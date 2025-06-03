@@ -7,6 +7,9 @@ import { UserAvatar } from "./user-avatar";
 import { GroupStats } from "./group-stats";
 import { UserGroups } from "./user-groups";
 import { ReportBugButton } from "@/components/report-bug-button";
+import { Button } from "@/components/ui/button";
+import { LineChart } from "lucide-react";
+import Link from "next/link";
 
 export default function Dashboard() {
   const { user, groups, userError, groupsError, groupsLoading } = useUser();
@@ -29,6 +32,14 @@ export default function Dashboard() {
               </p>
             </div>
             <div className="flex items-center gap-4">
+              {user && (
+                <Button variant="outline" size="sm" className="gap-2" asChild>
+                  <Link href="/dashboard/admin">
+                    <LineChart className="h-4 w-4" />
+                    Admin Dashboard
+                  </Link>
+                </Button>
+              )}
               <ReportBugButton />
               <UserAvatar />
             </div>
