@@ -62,7 +62,7 @@ export default function GroupPage() {
   };
   useEffect(() => {
     fetchPendingExpenses();
-  }, []);
+  }, [activeElement]);
 
   // console.log("Group:", group);
   // console.log("Active Element:", activeElement);

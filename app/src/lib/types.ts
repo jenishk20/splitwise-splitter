@@ -32,6 +32,7 @@ export interface User {
 	notifications_read: string;
 	notifications_count: number;
 	notifications: UserNotifications;
+	isAdmin?: boolean;
 }
 
 export interface Balance {
