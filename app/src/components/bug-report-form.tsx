@@ -73,12 +73,6 @@ export function BugReportForm({ onSubmitSuccess }: BugReportFormProps) {
 
   return (
     <Card className="w-full max-w-2xl mx-auto">
-      <CardHeader>
-        <CardTitle>Report an Issue</CardTitle>
-        <CardDescription>
-          Help us improve by reporting bugs or suggesting improvements
-        </CardDescription>
-      </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
@@ -89,7 +83,7 @@ export function BugReportForm({ onSubmitSuccess }: BugReportFormProps) {
                 setFormData({ ...formData, type: value })
               }
             >
-              <SelectTrigger>
+              <SelectTrigger className="border-slate-400">
                 <SelectValue placeholder="Select report type" />
               </SelectTrigger>
               <SelectContent>
@@ -108,7 +102,7 @@ export function BugReportForm({ onSubmitSuccess }: BugReportFormProps) {
               onChange={(e) =>
                 setFormData({ ...formData, description: e.target.value })
               }
-              className="min-h-[150px]"
+              className="min-h-[150px] border border-slate-400"
             />
           </div>
 

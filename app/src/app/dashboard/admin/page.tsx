@@ -1,105 +1,191 @@
 "use client";
 
-import { useEffect } from "react";
-import { useUser } from "@/hooks/use-user";
-import { redirect } from "next/navigation";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Users, Bug, UserPlus } from "lucide-react";
+import { format } from "date-fns";
+import { getAdminStats, getAdminUsers, getAdminBugs } from "@/client/admin";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+
+interface Stats {
+  totalUsers: number;
+  newUsersLastMonth: number;
+  totalBugs: number;
+}
+
+interface User {
+  firstName: string;
+  lastName: string;
+  email: string;
+  createdAt: string;
+}
+
+interface Bug {
+  type: string;
+  description: string;
+  reporterName: string;
+  reporterEmail: string;
+}
 
 export default function AdminDashboard() {
-  const { user } = useUser();
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [users, setUsers] = useState<User[]>([]);
+  const [bugs, setBugs] = useState<Bug[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  // Redirect non-admin users
   useEffect(() => {
-    if (!user?.isAdmin) {
-      redirect("/dashboard");
-    }
-  }, [user]);
+    const fetchAdminData = async () => {
+      try {
+        const statsData = await getAdminStats();
+        const usersData = await getAdminUsers();
+        const bugsData = await getAdminBugs();
+
+        setStats(statsData);
+        setUsers(usersData);
+        setBugs(bugsData);
+      } catch (error) {
+        console.error("Error fetching admin data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAdminData();
+  }, []);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex items-center gap-4 mb-6">
-        <Button variant="outline" size="icon" asChild>
-          <Link href="/dashboard">
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-        </Button>
-        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+    <div className="container mx-auto p-6 space-y-8">
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="sm" asChild>
+            <Link href="/dashboard" className="flex items-center gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              Back to Dashboard
+            </Link>
+          </Button>
+        </div>
       </div>
 
-      <Separator className="my-6" />
+      <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
 
-      <Tabs defaultValue="overview" className="w-full">
+      {/* Stats Cards */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.totalUsers}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              New Users (Month)
+            </CardTitle>
+            <UserPlus className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.newUsersLastMonth}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Bugs</CardTitle>
+            <Bug className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.totalBugs}</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Tabs for Users and Bugs */}
+      <Tabs defaultValue="users" className="w-full">
         <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="bug-reports">Bug Reports</TabsTrigger>
           <TabsTrigger value="users">Users</TabsTrigger>
+          <TabsTrigger value="bugs">Bug Reports</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-4 mt-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Total Users</CardTitle>
-                <CardDescription>Active users in the system</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold">0</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Total Groups</CardTitle>
-                <CardDescription>Active groups created</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold">0</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Bug Reports</CardTitle>
-                <CardDescription>Pending reports to review</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold">0</p>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="bug-reports" className="mt-6">
+        <TabsContent value="users">
           <Card>
             <CardHeader>
-              <CardTitle>Bug Reports</CardTitle>
-              <CardDescription>View and manage reported issues</CardDescription>
+              <CardTitle>User List</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">No bug reports found</p>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Join Date</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {users.map((user, index) => (
+                    <TableRow key={index}>
+                      <TableCell>
+                        {user.firstName} {user.lastName}
+                      </TableCell>
+                      <TableCell>{user.email}</TableCell>
+                      <TableCell>
+                        {user?.createdAt &&
+                        !isNaN(new Date(user.createdAt).getTime())
+                          ? format(new Date(user.createdAt), "PPP")
+                          : "N/A"}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="users" className="mt-6">
+        <TabsContent value="bugs">
           <Card>
             <CardHeader>
-              <CardTitle>Users</CardTitle>
-              <CardDescription>Manage system users</CardDescription>
+              <CardTitle>Bug Reports</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">No users found</p>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead>Reporter</TableHead>
+                    <TableHead>Email</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {bugs.map((bug, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{bug.type}</TableCell>
+                      <TableCell>{bug.description}</TableCell>
+                      <TableCell>{bug.reporterName}</TableCell>
+                      <TableCell>{bug.reporterEmail}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         </TabsContent>

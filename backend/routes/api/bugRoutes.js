@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { BugModel } = require("../../models/bugs");
+const BugModel = require("../../models/bugs");
 
 router.post("/", async (req, res) => {
   const { type, description, reporterName, reporterEmail } = req.body;

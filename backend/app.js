@@ -25,6 +25,7 @@ const groupRoutes = require("./routes/api/groupRoutes");
 const expenseRoutes = require("./routes/api/expenseRoutes");
 const jobRoutes = require("./routes/api/jobRoutes");
 const bugRoutes = require("./routes/api/bugRoutes");
+const adminRoutes = require("./routes/api/adminRoutes");
 
 app.use("/login", loginRoutes);
 app.use("/upload", userAuth, fileUploadRoutes);
@@ -32,6 +33,7 @@ app.use("/groups", userAuth, groupRoutes);
 app.use("/expenses", userAuth, expenseRoutes);
 app.use("/jobs", userAuth, jobRoutes);
 app.use("/bug-reports", userAuth, bugRoutes);
+app.use("/admin", adminRoutes);
 
 app.listen(process.env.PORT, () => {
   connect()

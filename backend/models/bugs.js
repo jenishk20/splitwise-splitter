@@ -10,4 +10,4 @@ const bugSchema = new Schema({
 });
 
 const BugModel = mongoose.model("Bug", bugSchema);
-module.exports = { BugModel };
+module.exports = BugModel;
