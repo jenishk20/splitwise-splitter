@@ -1,9 +1,14 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { BASE_API_URL } from "@/lib/consts";
-import { Receipt, Users } from "lucide-react";
+import { Receipt, Users, Play } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 
 export default function Home() {
+  const [showVideo, setShowVideo] = useState(false);
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
       <section className="container mx-auto px-4 py-20 flex flex-col items-center justify-center text-center space-y-12">
@@ -19,8 +24,31 @@ export default function Home() {
             <Button size="lg" asChild>
               <Link href={`${BASE_API_URL}/login/auth`}>Get Started</Link>
             </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={() => setShowVideo(true)}
+              className="gap-2"
+            >
+              See How It Works
+              <Play className="h-4 w-4" />
+            </Button>
           </div>
         </div>
+
+        {showVideo && (
+          <div className="w-full max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="relative aspect-video rounded-xl overflow-hidden border bg-card shadow-lg">
+              <iframe
+                className="w-full h-full"
+                src="https://www.youtube.com/embed/hE0lltGmUa0"
+                title="Splitmate Demo"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          </div>
+        )}
 
         <div className="grid md:grid-cols-3 gap-8 w-full max-w-5xl mt-16">
           <div className="p-6 rounded-lg border bg-card text-card-foreground shadow-sm">

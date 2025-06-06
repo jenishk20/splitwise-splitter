@@ -145,6 +145,7 @@ export const ExpenseCard = ({
                             handlePreferenceChange(idx, member.id, checked)
                           }
                           disabled={member.id !== user?.id}
+                          className="cursor-pointer border-gray-300"
                         />
                       </TableCell>
                     ))}
