@@ -23,12 +23,13 @@ router.get("/callback", async (req, res) => {
   res.cookie("access_token", access_token, cookieOptions.accessToken);
   res.cookie("user_details", JSON.stringify(user), cookieOptions.userDetails);
 
-  const { id, first_name, last_name, email } = user?.user;
+  const { id, first_name, last_name, email, isAdmin } = user?.user;
   const userDetails = {
     splitwiseId: id,
     firstName: first_name,
     lastName: last_name,
     email: email,
+    isAdmin: isAdmin,
   };
   const existingUser = await UserModel.findOne({ splitwiseId: id });
   if (!existingUser) {
