@@ -90,6 +90,7 @@ export interface Group {
 }
 
 export interface InvoiceJob {
+	_id : string;
 	jobId: string;
 	groupId: string;
 	userId: string;
@@ -104,4 +105,19 @@ export interface InvoiceItem {
 	item: string;
 	quantity: number;
 	price: number;
+}
+
+export interface BugReport {
+	id: string;
+	type: string;
+	title: string;
+	description: string;
+	reporterName: string;
+	reporterEmail: string;
+	status: "open" | "in-progress" | "closed";
+	createdAt: string;
+	steps?: string;
+	expectedBehavior?: string;
+	actualBehavior?: string;
+	browserInfo?: string;
 }

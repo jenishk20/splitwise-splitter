@@ -1,6 +1,13 @@
 import axios from "axios";
 import { BASE_API_URL } from "@/lib/consts";
-import type { Group, User } from "@/lib/types";
+import type { Group, User, BugReport } from "@/lib/types";
+
+interface BugReportFormData {
+	type: string;
+	description: string;
+	reporterName: string;
+	reporterEmail: string;
+}
 
 export const getUser = async (): Promise<User | null> => {
 	const response = await axios.get(`${BASE_API_URL}/login/me`, {
@@ -149,9 +156,16 @@ export const finalizeExpenseOnSplitwise = async (expenseId: string): Promise<voi
 	}
 };
 
-
-export const reportBug = async (bugReport: BugReport): Promise<void> => {
+export const reportBug = async (formData: BugReportFormData): Promise<void> => {
 	try {
+		const bugReport: BugReport = {
+			...formData,
+			id: crypto.randomUUID(),
+			status: "open",
+			createdAt: new Date().toISOString(),
+			title: formData.description.slice(0, 100), // Use first 100 chars of description as title
+		};
+
 		await axios.post(`${BASE_API_URL}/bug-reports`, bugReport, { withCredentials: true });
 	} catch (error) {
 		console.error("Error reporting bug:", error);
