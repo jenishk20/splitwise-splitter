@@ -144,7 +144,9 @@ export const ExpenseCard = ({
                           onCheckedChange={(checked: boolean) =>
                             handlePreferenceChange(idx, member.id, checked)
                           }
-                          disabled={member.id !== user?.id?.toString()}
+                          disabled={
+                            member?.id?.toString() !== user?.id?.toString()
+                          }
                           className="cursor-pointer border-gray-300"
                         />
                       </TableCell>
