@@ -18,7 +18,10 @@ router.get("/auth", (req, res) => {
 router.get("/callback", async (req, res) => {
   const { code } = req.query;
   const tokens = await getToken(code);
-  const user = await getCurrentUser(tokens.access_token);
+  let user = await getCurrentUser(tokens.access_token);
+  if (user && user?.user) {
+    user.user.isAdmin = true;
+  }
   const access_token = tokens.access_token;
   res.cookie("access_token", access_token, cookieOptions.accessToken);
   res.cookie("user_details", JSON.stringify(user), cookieOptions.userDetails);
