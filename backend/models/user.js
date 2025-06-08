@@ -21,6 +21,14 @@ const userSchema = new Schema(
       required: true,
       unique: true,
     },
+    jobs: {
+      type: [Schema.Types.ObjectId],
+      ref: "Job",
+    },
+    isAdmin: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

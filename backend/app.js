@@ -6,6 +6,10 @@ const { userAuth } = require("./routes/middlewares/userAuth");
 const { connect } = require("./config/database");
 const app = express();
 const cookieParser = require("cookie-parser");
+const {
+  loginLimiter,
+  apiLimiter,
+} = require("./routes/middlewares/rateLimiter");
 
 app.use(cookieParser());
 console.log("CORS enabled for:", process.env.FRONTEND_URL);
@@ -23,11 +27,17 @@ const loginRoutes = require("./routes/auth/loginRoutes");
 const fileUploadRoutes = require("./routes/api/fileUploadRoutes");
 const groupRoutes = require("./routes/api/groupRoutes");
 const expenseRoutes = require("./routes/api/expenseRoutes");
+const jobRoutes = require("./routes/api/jobRoutes");
+const bugRoutes = require("./routes/api/bugRoutes");
+const adminRoutes = require("./routes/api/adminRoutes");
 
-app.use("/login", loginRoutes);
-app.use("/upload", userAuth, fileUploadRoutes);
-app.use("/groups", userAuth, groupRoutes);
-app.use("/expenses", userAuth, expenseRoutes);
+app.use("/login", loginLimiter, loginRoutes);
+app.use("/upload", userAuth, apiLimiter, fileUploadRoutes);
+app.use("/groups", userAuth, apiLimiter, groupRoutes);
+app.use("/expenses", userAuth, apiLimiter, expenseRoutes);
+app.use("/jobs", userAuth, apiLimiter, jobRoutes);
+app.use("/bug-reports", userAuth, apiLimiter, bugRoutes);
+app.use("/admin", apiLimiter, adminRoutes);
 
 app.listen(process.env.PORT, () => {
   connect()
