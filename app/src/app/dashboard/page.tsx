@@ -47,7 +47,7 @@ export default function Dashboard() {
               </p>
             </div>
             <div className="flex items-center gap-4">
-              {user && (
+              {user?.isAdmin && (
                 <Button variant="outline" size="sm" className="gap-2" asChild>
                   <Link href="/dashboard/admin">
                     <LineChart className="h-4 w-4" />
