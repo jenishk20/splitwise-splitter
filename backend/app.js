@@ -37,7 +37,7 @@ app.use("/groups", userAuth, apiLimiter, groupRoutes);
 app.use("/expenses", userAuth, apiLimiter, expenseRoutes);
 app.use("/jobs", userAuth, apiLimiter, jobRoutes);
 app.use("/bug-reports", userAuth, apiLimiter, bugRoutes);
-app.use("/admin", adminRoutes);
+app.use("/admin", apiLimiter, adminRoutes);
 
 app.listen(process.env.PORT, () => {
   connect()
