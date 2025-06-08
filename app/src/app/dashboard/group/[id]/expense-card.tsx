@@ -63,7 +63,7 @@ export const ExpenseCard = ({
     memberId: string,
     value: boolean
   ) => {
-    if (memberId !== user?.id?.toString()) return;
+    if (memberId.toString() !== user?.id?.toString()) return;
     setParticipation((prev) => ({
       ...prev,
       [itemIndex]: {
