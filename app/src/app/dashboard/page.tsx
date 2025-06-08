@@ -10,9 +10,24 @@ import { ReportBugButton } from "@/components/report-bug-button";
 import { Button } from "@/components/ui/button";
 import { LineChart } from "lucide-react";
 import Link from "next/link";
+import { RateLimitError } from "@/components/rate-limit-error";
+import { AxiosError } from "axios";
 
 export default function Dashboard() {
   const { user, groups, userError, groupsError, groupsLoading } = useUser();
+
+  // Check for rate limiting errors
+  const isRateLimited =
+    (userError as AxiosError)?.response?.status === 429 ||
+    (groupsError as AxiosError)?.response?.status === 429;
+
+  if (isRateLimited) {
+    return (
+      <div className="w-full h-full px-4 sm:px-6 md:px-8 max-w-screen-lg mx-auto mt-12">
+        <RateLimitError />
+      </div>
+    );
+  }
 
   if (userError || groupsError) {
     window.location.href = "/";
