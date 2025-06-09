@@ -245,18 +245,19 @@ const GroupExpensesCard = () => {
         <CardTitle>Add Expense</CardTitle>
       </CardHeader>
       <CardContent className="h-full">
-        <Tabs defaultValue="csv" className="w-full h-full">
+        <Tabs defaultValue="picture" className="w-full h-full">
           <TabsList className="w-full">
-            <TabsTrigger value="csv" className="border-none w-full">
-              <Table className="w-4 h-4" />
-              CSV
-            </TabsTrigger>
             <TabsTrigger value="picture" className="border-none w-full">
               <ImageIcon className="w-4 h-4" />
               Image
             </TabsTrigger>
+            {/* Temporarily disabled CSV upload */}
+            {/* <TabsTrigger value="csv" className="border-none w-full">
+              <Table className="w-4 h-4" />
+              CSV
+            </TabsTrigger> */}
           </TabsList>
-          <TabsContent value="csv" className="h-full">
+          {/* <TabsContent value="csv" className="h-full">
             <div
               {...getCsvRootProps()}
               className={`w-full h-full rounded-md border-4 
@@ -272,7 +273,7 @@ const GroupExpensesCard = () => {
               <p className="text-sm">Accepts: .csv</p>
               <input {...getCsvInputProps()} />
             </div>
-          </TabsContent>
+          </TabsContent> */}
           <TabsContent value="picture" className="h-full">
             {pictureFileState?.file ? (
               <ScrollArea className="relative w-full h-[500px]">
@@ -333,8 +334,9 @@ const GroupExpensesCard = () => {
       </CardContent>
       <CardFooter>
         <p className="text-sm text-muted-foreground">
-          Please make sure both the image and the CSV file are clear and
-          readable. They must have amount, quantity and items.
+          {/* Updated footer text to reflect image-only upload */}
+          Please make sure the uploaded image is clear and readable. The image
+          should show the expense details including amount, quantity and items.
         </p>
       </CardFooter>
     </Card>
