@@ -63,7 +63,7 @@ export const ExpenseCard = ({
     memberId: string,
     value: boolean
   ) => {
-    if (memberId !== user?.id?.toString()) return;
+    if (memberId.toString() !== user?.id?.toString()) return;
     setParticipation((prev) => ({
       ...prev,
       [itemIndex]: {
@@ -144,7 +144,9 @@ export const ExpenseCard = ({
                           onCheckedChange={(checked: boolean) =>
                             handlePreferenceChange(idx, member.id, checked)
                           }
-                          disabled={member.id !== user?.id?.toString()}
+                          disabled={
+                            member?.id?.toString() !== user?.id?.toString()
+                          }
                           className="cursor-pointer border-gray-300"
                         />
                       </TableCell>
