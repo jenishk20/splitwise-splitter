@@ -172,3 +172,12 @@ export const reportBug = async (formData: BugReportFormData): Promise<void> => {
 		throw new Error("Failed to report bug");
 	}
 };
+
+export const deleteExpenseItem = async (expenseId: string, itemId: string): Promise<void> => {
+	try {
+		await axios.post(`${BASE_API_URL}/expenses/delete-item/${expenseId}/${itemId}`, {}, { withCredentials: true });
+	} catch (error) {
+		console.error("Error deleting expense item:", error);
+		throw new Error("Failed to delete expense item");
+	}
+};
