@@ -166,4 +166,23 @@ router.post("/delete/:expenseId", async (req, res) => {
   }
 });
 
+router.post("/delete-item/:expenseId/:itemId", async (req, res) => {
+  const { expenseId, itemId } = req.params;
+  try {
+    const expense = await ExpenseModel.findById(expenseId);
+    if (!expense) {
+      return res.status(404).json({ error: "Expense not found" });
+    }
+    expense.items = expense.items.filter(
+      (item) => item._id.toString() !== itemId
+    );
+    await expense.save();
+    res.json({ message: "Item deleted successfully" });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ error: "Failed to delete item", details: err.message });
+  }
+});
+
 module.exports = router;

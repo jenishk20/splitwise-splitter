@@ -6,3 +6,4 @@ backend/uploads/*
 splitwise-frontend/dist/*
 app/node_modules/*
 app/.env*
+mobile-app/*
