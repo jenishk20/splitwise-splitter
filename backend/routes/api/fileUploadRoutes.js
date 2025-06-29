@@ -4,24 +4,11 @@ const multer = require("multer");
 const fs = require("node:fs");
 const axios = require("axios");
 const ExpenseModel = require("../../models/expense");
-const { generateTextractData } = require("../../utils/openai");
-const {
-  TextractClient,
-  AnalyzeDocumentCommand,
-} = require("@aws-sdk/client-textract");
 const AWS = require("aws-sdk");
 const { v4: uuidv4 } = require("uuid");
-const uploadToS3 = require("../../services/uploadToS3");
 const InvoiceJobModel = require("../../models/invoicejob");
 
 const upload = multer({ dest: "uploads/" });
-const textract = new TextractClient({
-  region: "us-east-1",
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY,
-    secretAccessKey: process.env.AWS_SECRET_KEY,
-  },
-});
 
 router.post("/parse-invoice", upload.single("invoice"), async (req, res) => {
   try {
@@ -29,7 +16,29 @@ router.post("/parse-invoice", upload.single("invoice"), async (req, res) => {
     const userSplitWiseId = req?.user?.user_details?.user?.id;
 
     const jobId = uuidv4();
-    await uploadToS3(req.file.path, jobId);
+
+    const fileExtension = req.file.mimetype.split("/")[1] || "jpg";
+    const key = `uploads/${jobId}.${fileExtension}`;
+    const lambdaResponse = await axios.post(
+      process.env.FILE_UPLOAD_LAMBDA_URL,
+      {
+        fileType: fileExtension,
+        key: key,
+        jobId,
+      }
+    );
+
+    const { uploadUrl } = lambdaResponse.data;
+    const fileBuffer = fs.readFileSync(req.file.path);
+    try {
+      await axios.put(uploadUrl, fileBuffer, {
+        headers: {
+          "Content-Type": req.file.mimetype,
+        },
+      });
+    } catch (err) {
+      res.status(500).json({ error: "Upload Error", details: err.message });
+    }
     fs.unlinkSync(req.file.path);
 
     const invoiceJobModel = new InvoiceJobModel({
@@ -45,6 +54,5 @@ router.post("/parse-invoice", upload.single("invoice"), async (req, res) => {
     res.status(500).json({ error: "Upload Error", details: err.message });
   }
 });
-
 
 module.exports = router;

@@ -25,5 +25,8 @@
     "nodemon": "^3.1.10",
     "openai": "^4.98.0",
     "resend": "^4.5.1"
+  },
+  "devDependencies": {
+    "serverless": "^4.17.1"
   }
 }

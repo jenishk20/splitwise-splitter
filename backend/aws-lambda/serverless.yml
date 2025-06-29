@@ -1,0 +1,122 @@
+service: splitmate-lambdas
+
+frameworkVersion: "3"
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-east-1
+  stage: dev
+  memorySize: 512
+  timeout: 30
+  environment:
+    STAGE: ${self:provider.stage}
+    S3_BUCKET: ${self:custom.bucketName}
+    QUEUE_URL:
+      Ref: InvoiceJobQueue
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - s3:GetObject
+            - s3:PutObject
+          Resource:
+            - arn:aws:s3:::${self:custom.bucketName}/*
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - secretsmanager:GetSecretValue
+          Resource: arn:aws:secretsmanager:us-east-2:686255950391:secret:splitMate-keys-eDFG7F
+        - Effect: Allow
+          Action:
+            - bedrock:InvokeModelWithInferenceProfile
+            - bedrock:InvokeModel
+          Resource:
+            - arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-haiku-20240307-v1:0
+        - Effect: Allow
+          Action:
+            - sqs:SendMessage
+          Resource:
+            - Fn::GetAtt:
+                - InvoiceJobQueue
+                - Arn
+
+custom:
+  bucketName: splitwise-invoices-${self:provider.stage}
+
+functions:
+  uploadHandler:
+    handler: functions/upload-handler/index.handler
+    name: ${self:provider.stage}-upload-handler
+    description: Handle file uploads and return signed URL
+    events:
+      - http:
+          path: upload
+          method: post
+          cors: true
+    package:
+      patterns:
+        - "functions/upload-handler/**"
+        - "!node_modules/**"
+  invoiceProcessor:
+    handler: functions/invoice-processor/index.handler
+    name: ${self:provider.stage}-invoice-processor
+    description: Processes invoice images using Bedrock Claude
+    layers:
+      - { Ref: MongodbLambdaLayer }
+      - { Ref: BedrockSdkLambdaLayer }
+    memorySize: 1024
+    timeout: 300
+    package:
+      patterns:
+        - "functions/invoice-processor/**"
+        - "!node_modules/**"
+    events:
+      - s3:
+          bucket: ${self:custom.bucketName}
+          event: s3:ObjectCreated:*
+          existing: true
+
+resources:
+  Resources:
+    InvoiceBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.bucketName}
+        CorsConfiguration:
+          CorsRules:
+            - AllowedOrigins:
+                - "*"
+              AllowedHeaders:
+                - "*"
+              AllowedMethods:
+                - GET
+                - PUT
+                - POST
+                - HEAD
+              MaxAge: 3000
+    InvoiceJobQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: invoice-job-queue
+
+plugins:
+  - serverless-offline
+
+layers:
+  mongodb:
+    path: layers/mongodb
+    name: ${self:provider.stage}-mongodb-layer
+    compatibleRuntimes:
+      - nodejs18.x
+  bedrockSdk:
+    path: layers/bedrock-sdk
+    name: ${self:provider.stage}-bedrock-sdk-layer
+    compatibleRuntimes:
+      - nodejs18.x
