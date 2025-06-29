@@ -24,14 +24,22 @@ async function getImageFromS3(bucket, key) {
 exports.handler = async (event) => {
   let client, connection;
   const record = event.Records[0];
-  const bucket = record.s3.bucket.name;
-  const key = decodeURIComponent(record.s3.object.key.replace(/\+/g, " "));
-  const jobIdWithExt = key.split("/")[1]; // e.g. "ddc62b44-6605-4cd1-8c99-8aa3d6ee2838.jpg"
-  const jobId = jobIdWithExt.replace(/\.[^/.]+$/, ""); // remove file extension
-  try {
-    const secret = await getSecrets("splitMate-keys");
-    const imageBase64 = await getImageFromS3(bucket, key);
+  // const bucket = record.s3.bucket.name;
+  // const key = decodeURIComponent(record.s3.object.key.replace(/\+/g, " "));
+  // const jobIdWithExt = key.split("/")[1]; // e.g. "ddc62b44-6605-4cd1-8c99-8aa3d6ee2838.jpg"
+  // const jobId = jobIdWithExt.replace(/\.[^/.]+$/, ""); // remove file extension
 
+  const message = JSON.parse(record.body);
+  const { bucket, key, jobId } = message;
+
+  const secret = await getSecrets("splitMate-keys");
+  const imageBase64 = await getImageFromS3(bucket, key);
+  console.log("Image Base64:", imageBase64);
+  console.log("Job ID:", jobId);
+  console.log("Bucket:", bucket);
+  console.log("Key:", key);
+
+  try {
     client = new MongoClient(secret.MONGODB_URL);
     connection = await client.connect();
     const db = client.db("splitwise");

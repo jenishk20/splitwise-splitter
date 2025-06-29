@@ -78,10 +78,33 @@ functions:
         - "functions/invoice-processor/**"
         - "!node_modules/**"
     events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - InvoiceJobQueue
+              - Arn
+  s3ToSqsDispatcher:
+    handler: functions/s3-to-sqs-dispatch/index.handler
+    name: ${self:provider.stage}-s3-to-sqs-dispatcher
+    description: Dispatches S3 events to SQS
+    package:
+      patterns:
+        - "functions/s3-to-sqs-dispatch/**"
+        - "!node_modules/**"
+    events:
       - s3:
           bucket: ${self:custom.bucketName}
           event: s3:ObjectCreated:*
           existing: true
+    environment:
+      QUEUE_URL:
+        Ref: InvoiceJobQueue
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - sqs:SendMessage
+        Resource:
+          - arn:aws:sqs:us-east-1:${AWS::AccountId}:invoice-job-queue
 
 resources:
   Resources:
@@ -105,6 +128,7 @@ resources:
       Type: AWS::SQS::Queue
       Properties:
         QueueName: invoice-job-queue
+        VisibilityTimeout: 310
 
 plugins:
   - serverless-offline

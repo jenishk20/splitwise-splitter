@@ -14,22 +14,6 @@ module.exports.handler = async (event) => {
       Expires: 300,
       ContentType: `image/${fileType}`,
     });
-
-    const sqsPayload = {
-      jobId,
-      key,
-      bucket: BUCKET_NAME,
-      fileType,
-      timestamp: Date.now(),
-    };
-
-    await sqs
-      .sendMessage({
-        QueueUrl: QUEUE_URL,
-        MessageBody: JSON.stringify(sqsPayload),
-      })
-      .promise();
-
     return {
       statusCode: 200,
       body: JSON.stringify({ uploadUrl: url, key, jobId }),

@@ -16,7 +16,6 @@ router.post("/parse-invoice", upload.single("invoice"), async (req, res) => {
     const userSplitWiseId = req?.user?.user_details?.user?.id;
 
     const jobId = uuidv4();
-
     const fileExtension = req.file.mimetype.split("/")[1] || "jpg";
     const key = `uploads/${jobId}.${fileExtension}`;
     const lambdaResponse = await axios.post(
@@ -51,6 +50,7 @@ router.post("/parse-invoice", upload.single("invoice"), async (req, res) => {
     await invoiceJobModel.save();
     res.status(200).json({ message: "Job submitted successfully", jobId });
   } catch (err) {
+    console.log("Error:", err);
     res.status(500).json({ error: "Upload Error", details: err.message });
   }
 });

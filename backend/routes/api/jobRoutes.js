@@ -79,7 +79,6 @@ router.get("/get-jobs/:groupId", async (req, res) => {
       groupId,
       jobId: { $ne: null },
     });
-    console.log("Submitted Job IDs:", submittedJobIds);
     const jobs = await InvoiceJobModel.find({
       groupId,
       _id: { $nin: submittedJobIds },
