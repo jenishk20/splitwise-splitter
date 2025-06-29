@@ -1,147 +1,114 @@
-# Splitwise Splitter
+# SplitMate – AI Powered Expense Splitter
 
-A modern web application that enhances the Splitwise experience by providing advanced group expense management and analytics. Built with Next.js, Express, MongoDB, and AWS Lambda for asynchronous file processing.
+_Infinitely Scalable Serverless System for Receipt Parsing and Group Expense Management_
 
-## 🌟 Features
+SplitMate is a modern web application that transforms how groups split bills. Whether you're managing groceries, dining out, or any shared expense, SplitMate uses AI and serverless infrastructure to automatically parse receipts, handle opt-in logic, and finalize splits via Splitwise.
 
-### Core Features
+> Built on an event-driven, serverless architecture that scales effortlessly using AWS Lambda, S3, and SQS.
 
-- **Splitwise Integration**: Seamlessly connects with your Splitwise account
-- **Group Management**: Create and manage expense groups efficiently
-- **Expense Tracking**: Detailed tracking of shared expenses
-- **Async File Processing**:
-  - AWS Lambda-powered file processing
-  - Efficient handling of large file uploads
-  - Automatic receipt data extraction
-  - Background processing status tracking
-- **Job Processing**: Background task handling for better performance
+---
+
+## Features
+
+### Core
+
+- **AI-Driven Receipt Parsing**: Upload an invoice → Claude Vision (via Amazon Bedrock) extracts items → Group members opt-in/out → Final split on Splitwise.
+- **Infinitely Scalable Backend**: Async, event-driven pipeline using AWS Lambda, SQS, and S3.
+- **Job Queuing System**: Background tasks decoupled via SQS for high-throughput workloads.
+- **Real-Time Status Tracking**: MongoDB keeps track of parsing progress and completion.
+- **Opt-In Based Splits**: Every group member sees parsed items and marks what they consumed.
 
 ### Admin Dashboard
 
-- **User Analytics**: Track user registration and growth
-- **Bug Tracking**: Centralized system for bug reports and management
-- **User Management**: Comprehensive user data visualization
-- **File Processing Monitoring**: Track status of file processing jobs
+- User analytics and activity
+- File processing logs
+- Bug reporting and resolution tracking
 
-## 🚀 Tech Stack
+---
+
+## Serverless Architecture Overview
+
+### Backend Powerhouse (AI Parsing Pipeline)
+
+1. **Upload Invoice**  
+   Frontend receives a signed S3 URL from a Lambda function and uploads the invoice image.
+
+2. **S3 Trigger**  
+   S3 triggers a Lambda (`s3-to-sqs-dispatcher`) which sends a message to SQS (decouples upload from processing).
+
+3. **SQS Consumer Lambda**  
+   Another Lambda (`invoice-processor`) polls SQS → fetches the image from S3 → sends it to Claude via Amazon Bedrock.
+
+4. **Parsing & Storage**  
+   Claude responds with structured JSON → Result is saved in MongoDB and marked as `Done`.
+
+### Architecture Diagram ( Generated from Cloudformation Template )
+
+![Architecture](https://resume-jenish.s3.us-east-1.amazonaws.com/Architecture.png)
+
+---
+
+## Tech Stack
 
 ### Frontend
 
-- Next.js 13+ (React Framework)
-- TypeScript
-- Tailwind CSS
-- Shadcn UI Components
+- Next.js 13+
+- Tailwind CSS + Shadcn UI
 - Lucide Icons
 
 ### Backend
 
-- Express.js
-- MongoDB
-- JWT Authentication
-- Cookie-based Sessions
+- ExpressJS API (deployed on Render)
+- MongoDB Atlas
+- AWS Lambda for asynchronous job processing
+- S3 for file storage
+- SQS for decoupling uploads and processing
+- Bedrock Claude for image parsing
 
-### Cloud Infrastructure
+---
 
-- **AWS Lambda**: Serverless file processing
-- **AWS S3**: File storage
-- **AWS CloudWatch**: Lambda function monitoring
-- **AWS IAM**: Security and access management
+## AWS Lambda & Layers
 
-## 📦 Prerequisites
+- **upload-handler** – Generates signed S3 upload URLs
+- **s3-to-sqs-dispatcher** – Triggered on image upload to S3; sends job info to SQS
+- **invoice-processor** – Polls SQS, retrieves image, calls Claude, updates MongoDB
 
-Before you begin, ensure you have the following installed:
+### Lambda Layers
 
-- Node.js (v16 or higher)
-- MongoDB
-- npm or yarn
-- Splitwise Developer Account
-- AWS Account with appropriate permissions
+- **MongoDB Layer**: Reusable DB access logic
+- **Bedrock SDK Layer**: Encapsulates image + prompt inference logic for Claude
 
-## 💻 Installation
+---
 
-1. **Clone the repository**
+## Challenges We Ran Into
 
-   ```bash
-   git clone https://github.com/yourusername/splitwise-splitter.git
-   cd splitwise-splitter
-   ```
+- Understanding and formatting Bedrock payloads for image-based inference
+- Handling S3 event listener conflicts when multiple Lambdas target the same bucket
+- CloudFormation rollbacks when buckets weren't empty or had conflicting configs
 
-2. **Set up environment variables**
+---
 
-   Create `.env` file in the backend directory:
+## Accomplishments
 
-   ```env
-   PORT=3001
-   MONGODB_URI=your_mongodb_uri
-   FRONTEND_URL=http://localhost:3000
+- Built a cleanly decoupled and infinitely scalable MVP
+- Integrated Claude Vision in production-grade workflow
+- Enabled real-time item opt-in/out per user with backend sync
 
-   # AWS Configuration
-   AWS_REGION=your_aws_region
-   AWS_ACCESS_KEY_ID=your_access_key
-   AWS_SECRET_ACCESS_KEY=your_secret_key
-   AWS_S3_BUCKET=your_bucket_name
-   AWS_LAMBDA_FUNCTION=your_lambda_function_name
-   ```
+---
 
-3. **Install dependencies**
+## What We Learned
 
-   Frontend:
+- Building event-driven serverless apps with AWS Lambda, SQS, S3
+- Secret management using AWS SecretsManager
+- Bedrock Claude 3 Vision usage for multimodal inference
+- Async job orchestration in production-like environments
 
-   ```bash
-   cd app
-   npm install
-   ```
+---
 
-   Backend:
+## What's Next
 
-   ```bash
-   cd backend
-   npm install
-   ```
+- Build a mobile version with camera-based invoice uploads
+- Add item-level heuristics (weights, discounts, etc.) to improve splitting logic
+- Implement audit trails and confirmation flows for group members
 
-4. **Start the development servers**
-
-   Frontend:
-
-   ```bash
-   npm run dev
-   ```
-
-   Backend:
-
-   ```bash
-   npm run dev
-   ```
-
-## 🏗️ AWS Lambda Setup
-
-1. **Create an S3 Bucket**
-
-   - Create a new S3 bucket for file storage
-   - Configure CORS for frontend access
-   - Set appropriate bucket policies
-
-2. **Create Lambda Function**
-
-   - Create a new Lambda function
-   - Configure environment variables
-   - Set up IAM roles with necessary permissions:
-     - S3 read/write access
-     - CloudWatch logs access
-     - Any other required AWS services
-
-3. **Configure IAM Roles**
-   ```json
-   {
-     "Version": "2012-10-17",
-     "Statement": [
-       {
-         "Effect": "Allow",
-         "Action": ["s3:GetObject", "s3:PutObject"],
-         "Resource": "arn:aws:s3:::your-bucket-name/*"
-       }
-     ]
-   }
-   ```
-
-## 📁 Project Structure
+---
