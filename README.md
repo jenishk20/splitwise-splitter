@@ -42,6 +42,10 @@ SplitMate is a modern web application that transforms how groups split bills. Wh
 4. **Parsing & Storage**  
    Claude responds with structured JSON → Result is saved in MongoDB and marked as `Done`.
 
+### Flow Diagram ( Generated from User Flow and Business Logic )
+
+![Flow Diagram](https://resume-jenish.s3.us-east-1.amazonaws.com/image.png)
+
 ### Architecture Diagram ( Generated from Cloudformation Template )
 
 ![Architecture](https://resume-jenish.s3.us-east-1.amazonaws.com/Architecture.png)
