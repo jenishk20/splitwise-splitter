@@ -55,8 +55,6 @@ SplitMate is a modern web application that transforms how groups split bills. Wh
 
 ---
 
-
-
 ## AWS Lambda & Layers
 
 - **upload-handler** – Generates signed S3 upload URLs
