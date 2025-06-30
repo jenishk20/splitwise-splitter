@@ -42,6 +42,9 @@ SplitMate is a modern web application that transforms how groups split bills. Wh
 4. **Parsing & Storage**  
    Claude responds with structured JSON → Result is saved in MongoDB and marked as `Done`.
 
+5. **Error Handling**  
+   Failed processing jobs are automatically retried and eventually sent to a Dead Letter Queue (DLQ) for manual inspection.
+
 ### Flow Diagram ( Generated from User Flow and Business Logic )
 
 ![Flow Diagram](https://resume-jenish.s3.us-east-1.amazonaws.com/image.png)
@@ -49,6 +52,56 @@ SplitMate is a modern web application that transforms how groups split bills. Wh
 ### Architecture Diagram ( Generated from Cloudformation Template )
 
 ![Architecture](https://resume-jenish.s3.us-east-1.amazonaws.com/Architecture.png)
+
+---
+
+
+
+## AWS Lambda & Layers
+
+- **upload-handler** – Generates signed S3 upload URLs
+- **s3-to-sqs-dispatcher** – Triggered on image upload to S3; sends job info to SQS
+- **invoice-processor** – Polls SQS, retrieves image, calls Claude, updates MongoDB
+
+### Lambda Layers
+
+SplitMate leverages Lambda Layers to optimize deployment size and promote code reuse across multiple Lambda functions:
+
+- **MongoDB SDK Layer**:
+
+  - Contains MongoDB driver and connection utilities
+  - Provides standardized database access patterns and error handling
+  - Reduces individual Lambda deployment sizes by ~15MB
+  - Enables consistent connection pooling across all database operations
+
+- **Bedrock SDK Layer**:
+  - Encapsulates AWS Bedrock SDK and Claude 3 Vision integration logic
+  - Handles multimodal inference payloads and response parsing
+  - Provides retry mechanisms and error handling for AI service calls
+  - Includes prompt engineering utilities and response validation
+
+### SQS & Dead Letter Queue Architecture
+
+To ensure robust processing of invoice uploads, SplitMate implements a comprehensive queue-based system:
+
+- **Primary SQS Queue**:
+
+  - Receives invoice processing jobs from S3 trigger Lambda
+  - Configured with visibility timeout of 5 minutes
+  - Enables automatic retry of failed processing attempts (up to 3 retries)
+
+- **Dead Letter Queue (DLQ)**:
+
+  - Captures invoices that fail processing after maximum retry attempts
+  - Enables manual inspection and debugging of problematic uploads
+  - Prevents infinite retry loops and resource waste
+  - Integrates with CloudWatch alarms for operational monitoring
+
+- **Failure Scenarios Handled**:
+  - Bedrock service timeouts or rate limiting
+  - MongoDB connection failures
+  - Corrupted or unreadable invoice images
+  - Invalid S3 object permissions or missing files
 
 ---
 
@@ -68,19 +121,6 @@ SplitMate is a modern web application that transforms how groups split bills. Wh
 - S3 for file storage
 - SQS for decoupling uploads and processing
 - Bedrock Claude for image parsing
-
----
-
-## AWS Lambda & Layers
-
-- **upload-handler** – Generates signed S3 upload URLs
-- **s3-to-sqs-dispatcher** – Triggered on image upload to S3; sends job info to SQS
-- **invoice-processor** – Polls SQS, retrieves image, calls Claude, updates MongoDB
-
-### Lambda Layers
-
-- **MongoDB Layer**: Reusable DB access logic
-- **Bedrock SDK Layer**: Encapsulates image + prompt inference logic for Claude
 
 ---
 
