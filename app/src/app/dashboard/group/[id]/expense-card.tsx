@@ -28,7 +28,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { deleteExpense } from "@/client/user";
 import { updateExpensePreferences } from "@/client/user";
-import { finalizeExpenseOnSplitwise } from "@/client/user";
+import { finalizeExpenseOnSplitwise, deleteExpenseItem } from "@/client/user";
+import { Pencil, Trash } from "lucide-react";
 
 interface ExpenseCardProps {
   expense: any;
@@ -110,6 +111,17 @@ export const ExpenseCard = ({
     }
   };
 
+  const deleteItem = async (itemIndex: number) => {
+    try {
+      await deleteExpenseItem(expense._id, expense.items[itemIndex]._id);
+      toast.success("Item deleted successfully!");
+      refreshExpenses();
+    } catch (error) {
+      console.error("Error deleting item:", error);
+      toast.error("Failed to delete item");
+    }
+  };
+
   return (
     <AccordionItem value={expense._id}>
       <AccordionTrigger>
@@ -151,6 +163,17 @@ export const ExpenseCard = ({
                         />
                       </TableCell>
                     ))}
+                    <TableCell>
+                      {expense?.userId?.toString() === user?.id?.toString() && (
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => deleteItem(idx)}
+                        >
+                          <Trash className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
