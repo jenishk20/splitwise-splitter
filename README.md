@@ -146,11 +146,3 @@ To ensure robust processing of invoice uploads, SplitMate implements a comprehen
 - Async job orchestration in production-like environments
 
 ---
-
-## What's Next
-
-- Build a mobile version with camera-based invoice uploads
-- Add item-level heuristics (weights, discounts, etc.) to improve splitting logic
-- Implement audit trails and confirmation flows for group members
-
----
