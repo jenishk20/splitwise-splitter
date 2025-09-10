@@ -3,6 +3,7 @@ import "./globals.css";
 import { DM_Sans } from "next/font/google";
 import Providers, { ThemeProvider } from "@/components/providers";
 import { Toaster } from "@/components/ui/sonner";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 const dmSans = DM_Sans({
 	weight: ["400", "500", "700"],
@@ -23,6 +24,8 @@ export default function RootLayout({
 		<html lang="en" suppressHydrationWarning>
 			<body className={dmSans.className}>
 				<Providers>
+					<NuqsAdapter>
+
 					<ThemeProvider
 						attribute="class"
 						defaultTheme="dark"
@@ -31,6 +34,7 @@ export default function RootLayout({
 						<Toaster richColors position="top-right" />
 						{children}
 					</ThemeProvider>
+					</NuqsAdapter>
 				</Providers>
 			</body>
 		</html>

@@ -22,7 +22,7 @@ import { useUser } from "@/hooks/use-user";
 import { submitExpenseToGroup } from "@/client/user";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { useGroup } from "@/app/dashboard/group/[id]/group-provider";
+import { useRouter } from "next/navigation";
 export const InvoiceModal = ({
   job,
   disabled,
@@ -34,9 +34,8 @@ export const InvoiceModal = ({
 }) => {
   const [parsedResult, setParsedResult] = useState<InvoiceItem[]>([]);
   const { groups } = useUser();
-  const { setActiveElement } = useGroup();
+  const router = useRouter();
   const group = groups?.find((group) => group.id === Number(job.groupId));
-  const members = group?.members;
   const [description, setDescription] = useState("");
 
   useEffect(() => {
@@ -50,7 +49,7 @@ export const InvoiceModal = ({
       if (!group) throw new Error("Group not found");
       await submitExpenseToGroup(group, parsedResult, description, job?._id);
       toast.success("Expense submitted to the group!");
-      setActiveElement("expenses");
+      router.push(`/dashboard/group/${job.groupId}/expenses`);
     } catch (err) {
       console.error("Error submitting expense:", err);
     }
