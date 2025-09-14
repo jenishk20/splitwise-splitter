@@ -10,11 +10,13 @@ import type { GroupMember } from "@/lib/types";
 import { useDropzone } from "react-dropzone";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { handleFileUpload } from "@/client/user";
+import { handleFileUpload, submitManualExpense } from "@/client/user";
 import Image from "next/image";
 import { useMutation } from "@tanstack/react-query";
-import { ImageIcon, X, Loader2 } from "lucide-react";
+import { ImageIcon, X, Loader2, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
 
 interface Group {
@@ -67,6 +69,21 @@ const GroupExpensesCard = () => {
 
   const [isUploading, setIsUploading] = useState(false);
 
+  // Manual expense state
+  const [manualItems, setManualItems] = useState<
+    Array<{
+      name: string;
+      quantity: number;
+      price: number;
+    }>
+  >([]);
+  const [currentItem, setCurrentItem] = useState({
+    name: "",
+    quantity: 0,
+    price: 0,
+  });
+  const [isSubmittingManual, setIsSubmittingManual] = useState(false);
+
   const {
     getInputProps: getPictureInputProps,
     getRootProps: getPictureRootProps,
@@ -105,20 +122,22 @@ const GroupExpensesCard = () => {
 
   useEffect(() => {
     const handleImagePaste = (event: ClipboardEvent) => {
-      if(!event.clipboardData) return;
+      if (!event.clipboardData) return;
 
       const items = event.clipboardData.items;
-      const imageItems = Array.from(items).filter((item) => item.type.startsWith("image/"));
-      if(imageItems.length === 0) return;
+      const imageItems = Array.from(items).filter((item) =>
+        item.type.startsWith("image/")
+      );
+      if (imageItems.length === 0) return;
 
       const file = imageItems[0].getAsFile();
-      if(!file) return;
+      if (!file) return;
 
       setPictureFileState({
         file,
         error: false,
       });
-    }
+    };
 
     document.addEventListener("paste", handleImagePaste);
     return () => {
@@ -147,6 +166,61 @@ const GroupExpensesCard = () => {
     },
   });
 
+  const handleManualExpenseMutation = useMutation({
+    mutationFn: async (
+      items: Array<{ name: string; quantity: number; price: number }>
+    ) => {
+      return submitManualExpense(group?.id ?? 0, items, group as any);
+    },
+    onMutate: () => {
+      setIsSubmittingManual(true);
+    },
+    onSettled: () => {
+      setIsSubmittingManual(false);
+    },
+    onSuccess: () => {
+      router.push(`/dashboard/group/${id}/expenses`);
+      setManualItems([]);
+      setCurrentItem({ name: "", quantity: 0, price: 0 });
+      toast.success("Manual expense added successfully");
+    },
+    onError: (error) => {
+      toast.error("Failed to add manual expense", {
+        description: (error as Error).message,
+      });
+    },
+  });
+
+  const addManualItem = () => {
+    if (!currentItem.name.trim()) {
+      toast.error("Please enter an item name");
+      return;
+    }
+    if (currentItem.quantity <= 0) {
+      toast.error("Quantity must be greater than 0");
+      return;
+    }
+    if (currentItem.price <= 0) {
+      toast.error("Price per item must be greater than 0");
+      return;
+    }
+
+    setManualItems((prev) => [...prev, { ...currentItem }]);
+    setCurrentItem({ name: "", quantity: 0, price: 0 });
+  };
+
+  const removeManualItem = (index: number) => {
+    setManualItems((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSubmitManualExpense = () => {
+    if (manualItems.length === 0) {
+      toast.error("Please add at least one item");
+      return;
+    }
+    handleManualExpenseMutation.mutate(manualItems);
+  };
+
   return (
     <Card className="col-span-2">
       <CardHeader>
@@ -158,6 +232,10 @@ const GroupExpensesCard = () => {
             <TabsTrigger value="picture" className="border-none w-full">
               <ImageIcon className="w-4 h-4" />
               Image
+            </TabsTrigger>
+            <TabsTrigger value="manual" className="border-none w-full">
+              <Plus className="w-4 h-4" />
+              Manual Entry
             </TabsTrigger>
           </TabsList>
           <TabsContent value="picture" className="h-full">
@@ -215,6 +293,129 @@ const GroupExpensesCard = () => {
                 <input {...getPictureInputProps()} />
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="manual" className="h-full">
+            <div className="space-y-4 mt-4">
+              {/* Add Item Form */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 border rounded-lg">
+                <div className="space-y-2">
+                  <Label htmlFor="item-name">Item Name</Label>
+                  <Input
+                    id="item-name"
+                    placeholder="e.g., Pizza"
+                    value={currentItem.name}
+                    onChange={(e) =>
+                      setCurrentItem((prev) => ({
+                        ...prev,
+                        name: e.target.value,
+                      }))
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="quantity">Quantity</Label>
+                  <Input
+                    id="quantity"
+                    type="number"
+                    min="1"
+                    value={currentItem.quantity}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setCurrentItem((prev) => ({
+                        ...prev,
+                        quantity: value === "" ? 0 : parseInt(value) || 0,
+                      }));
+                    }}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="price">Price per Item ($)</Label>
+                  <Input
+                    id="price"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={currentItem.price}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setCurrentItem((prev) => ({
+                        ...prev,
+                        price: value === "" ? 0 : parseFloat(value) || 0,
+                      }));
+                    }}
+                  />
+                </div>
+                <div className="flex items-end">
+                  <Button onClick={addManualItem} className="w-full">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Item
+                  </Button>
+                </div>
+              </div>
+
+              {/* Items List */}
+              {manualItems.length > 0 && (
+                <div className="space-y-2">
+                  <Label>Added Items</Label>
+                  <ScrollArea className="max-h-[300px] border rounded-lg p-4">
+                    <div className="space-y-2">
+                      {manualItems.map((item, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between p-2 bg-muted rounded"
+                        >
+                          <div className="flex-1">
+                            <span className="font-medium">{item.name}</span>
+                            <span className="text-muted-foreground ml-2">
+                              Qty: {item.quantity} × ${item.price.toFixed(2)}{" "}
+                              per item = $
+                              {(item.quantity * item.price).toFixed(2)}
+                            </span>
+                          </div>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => removeManualItem(index)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+
+                  {/* Total and Submit */}
+                  <div className="flex items-center justify-between pt-4 border-t">
+                    <div className="text-lg font-semibold">
+                      Total: $
+                      {manualItems
+                        .reduce(
+                          (sum, item) => sum + item.quantity * item.price,
+                          0
+                        )
+                        .toFixed(2)}
+                    </div>
+                    <Button
+                      onClick={handleSubmitManualExpense}
+                      disabled={isSubmittingManual || manualItems.length === 0}
+                      className="min-w-[120px]"
+                    >
+                      {isSubmittingManual ? (
+                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      ) : null}
+                      Submit Expense
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {manualItems.length === 0 && (
+                <div className="text-center text-muted-foreground py-8">
+                  No items added yet. Use the form above to add items.
+                </div>
+              )}
+            </div>
           </TabsContent>
         </Tabs>
       </CardContent>
