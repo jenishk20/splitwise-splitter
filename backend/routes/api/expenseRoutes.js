@@ -185,4 +185,59 @@ router.post("/delete-item/:expenseId/:itemId", async (req, res) => {
   }
 });
 
+router.post("/add-manual-expense", async (req, res) => {
+  try {
+    const { groupId, items, group } = req.body;
+    const userSplitWiseId = req?.user?.user_details?.user?.id;
+    const userName = req?.user?.user_details?.user?.first_name;
+
+    const description = "Custom Expense to Group";
+    const jobId = "custom";
+
+    const groupMembers = group.members.map((m) => m.id.toString());
+
+    const sanitizedItems = items.map((item) => {
+      const cleanedPrice = parseFloat(
+        typeof item.price === "string"
+          ? item.price.replace(/[$,]/g, "")
+          : item.price
+      );
+
+      const participation = {};
+      groupMembers.forEach((memberId) => {
+        participation[memberId] = memberId === userSplitWiseId.toString();
+      });
+
+      return {
+        item: item.name,
+        quantity: item.quantity,
+        price: cleanedPrice,
+        participation,
+      };
+    });
+
+    const data = {
+      groupId: groupId,
+      items: sanitizedItems,
+      userId: userSplitWiseId,
+      userName: userName,
+      description: description,
+      jobId: jobId,
+    };
+
+    const expenses = new ExpenseModel(data);
+    await expenses.save();
+
+    res.status(201).json({
+      message: "Manual expense created successfully",
+      expenseId: expenses._id,
+    });
+  } catch (err) {
+    console.error("Error creating manual expense:", err);
+    res
+      .status(500)
+      .json({ error: "Failed to create manual expense", details: err.message });
+  }
+});
+
 module.exports = router;
