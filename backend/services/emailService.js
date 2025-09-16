@@ -21,8 +21,6 @@ export const sendExpenseNotification = async ({ group, items, addedBy }) => {
     const emailResults = [];
 
     for (const email of recipientEmails) {
-      console.log(`📤 Sending individual email to: ${email}`);
-
       const emailResult = await resend.emails.send({
         from: process.env.FROM_EMAIL || "SplitMate <noreply@jenishkothari.me>",
         to: [email], // Send to one recipient at a time
@@ -33,10 +31,8 @@ export const sendExpenseNotification = async ({ group, items, addedBy }) => {
           "X-Mailer": "SplitMate Application",
         },
       });
-
-      console.log(`✅ Email sent to ${email}:`, emailResult);
+      console.log("✅ Email sent to %s:", email, emailResult);
       emailResults.push({ email, result: emailResult });
-
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
 
