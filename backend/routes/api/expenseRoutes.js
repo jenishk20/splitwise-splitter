@@ -3,6 +3,7 @@ const router = express.Router();
 const ExpenseModel = require("../../models/expense");
 const { computeUserShares } = require("../../utils/costSplitter");
 const { postToSplitwise } = require("../../services/splitwiseService");
+const { sendExpenseNotification } = require("../../services/emailService");
 const mongoose = require("mongoose");
 
 router.get("/get-expenses/:groupId", async (req, res) => {
@@ -52,6 +53,17 @@ router.post("/submit-expense", async (req, res) => {
     };
     const expenses = new ExpenseModel(data);
     await expenses.save();
+
+    try {
+      await sendExpenseNotification({
+        group: group,
+        items: sanitizedItems,
+        addedBy: userName,
+      });
+      console.log("Email notification sent successfully");
+    } catch (emailError) {
+      console.error("Failed to send email notification:", emailError);
+    }
     res.status(201).json({
       message: "Expense created successfully",
       expenseId: expenses._id,
@@ -228,6 +240,18 @@ router.post("/add-manual-expense", async (req, res) => {
 
     const expenses = new ExpenseModel(data);
     await expenses.save();
+
+    // Send email notification to group members
+    try {
+      await sendExpenseNotification({
+        group: group,
+        items: sanitizedItems,
+        addedBy: userName,
+      });
+      console.log("Email notification sent successfully");
+    } catch (emailError) {
+      console.error("Failed to send email notification:", emailError);
+    }
 
     res.status(201).json({
       message: "Manual expense created successfully",
