@@ -3,6 +3,7 @@ const router = express.Router();
 const ExpenseModel = require("../../models/expense");
 const { computeUserShares } = require("../../utils/costSplitter");
 const { postToSplitwise } = require("../../services/splitwiseService");
+const mongoose = require("mongoose");
 
 router.get("/get-expenses/:groupId", async (req, res) => {
   const { groupId } = req.params;
@@ -192,7 +193,7 @@ router.post("/add-manual-expense", async (req, res) => {
     const userName = req?.user?.user_details?.user?.first_name;
 
     const description = "Custom Expense to Group";
-    const jobId = "custom";
+    const jobId = new mongoose.Types.ObjectId().toString();
 
     const groupMembers = group.members.map((m) => m.id.toString());
 
