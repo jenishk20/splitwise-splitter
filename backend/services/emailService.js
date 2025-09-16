@@ -13,17 +13,38 @@ export const sendExpenseNotification = async ({ group, items, addedBy }) => {
     <p>👋 Hello!</p>
     <p><strong>${addedBy}</strong> just added a new expense in the group <strong>${group.name}</strong>.</p>
     <p><strong>Items:</strong><br>${itemSummary}</p>
+    <p><strong>⚠️ Important:</strong> Please add your preferences or you will be counted in all items by default.</p>
     <p>Go to SplitMate to opt in/out or finalize it.</p>
   `;
 
   try {
-    await resend.emails.send({
-      from: "jenishk1800@gmail.com",
-      to: recipientEmails,
-      subject: `🧾 New Expense in Group: ${group.name}`,
-      html,
-    });
+    const emailResults = [];
+
+    for (const email of recipientEmails) {
+      console.log(`📤 Sending individual email to: ${email}`);
+
+      const emailResult = await resend.emails.send({
+        from: process.env.FROM_EMAIL || "SplitMate <noreply@jenishkothari.me>",
+        to: [email], // Send to one recipient at a time
+        subject: `🧾 New Expense in Group: ${group.name}`,
+        html,
+        headers: {
+          "X-Priority": "3",
+          "X-Mailer": "SplitMate Application",
+        },
+      });
+
+      console.log(`✅ Email sent to ${email}:`, emailResult);
+      emailResults.push({ email, result: emailResult });
+
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+
+    console.log(
+      `📊 Summary: Successfully sent ${emailResults.length} individual emails`
+    );
   } catch (err) {
     console.error("Failed to send email:", err);
+    throw err;
   }
 };
