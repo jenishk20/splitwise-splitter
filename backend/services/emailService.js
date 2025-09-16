@@ -4,7 +4,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const sendExpenseNotification = async ({ group, items, addedBy }) => {
   const recipientEmails = group.members.map((m) => m.email);
-
+  console.log(recipientEmails);
   const itemSummary = items
     .map((item, idx) => `${idx + 1}. ${item.item} — $${item.price}`)
     .join("<br>");
@@ -18,27 +18,39 @@ export const sendExpenseNotification = async ({ group, items, addedBy }) => {
   `;
 
   try {
-    const emailResults = [];
+    const results = [];
+    const failures = [];
 
     for (const email of recipientEmails) {
-      const emailResult = await resend.emails.send({
-        from: process.env.FROM_EMAIL || "SplitMate <noreply@jenishkothari.me>",
-        to: [email], // Send to one recipient at a time
-        subject: `🧾 New Expense in Group: ${group.name}`,
-        html,
-        headers: {
-          "X-Priority": "3",
-          "X-Mailer": "SplitMate Application",
-        },
-      });
-      console.log("✅ Email sent to %s:", email, emailResult);
-      emailResults.push({ email, result: emailResult });
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      try {
+        const result = await resend.emails.send(
+          {
+            from:
+              process.env.FROM_EMAIL || "SplitMate <noreply@jenishkothari.me>",
+            to: [email],
+            subject: `🧾 New Expense in Group: ${group.name}`,
+            html,
+          },
+          {
+            headers: {
+              "X-Priority": "3",
+              "X-Mailer": "SplitMate Application",
+            },
+          }
+        );
+        results.push({ email, result });
+        await new Promise((resolve) =>
+          setTimeout(resolve, process.env.EMAIL_SEND_DELAY_MS || 100)
+        );
+      } catch (error) {
+        failures.push({ email, error });
+      }
     }
-
-    console.log(
-      `📊 Summary: Successfully sent ${emailResults.length} individual emails`
-    );
+    console.log(failures);
+    if (failures.length === recipientEmails.length) {
+      throw new Error("All emails failed to send");
+    }
+    return { results, failures };
   } catch (err) {
     console.error("Failed to send email:", err);
     throw err;
