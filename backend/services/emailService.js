@@ -4,7 +4,6 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const sendExpenseNotification = async ({ group, items, addedBy }) => {
   const recipientEmails = group.members.map((m) => m.email);
-  console.log(recipientEmails);
   const itemSummary = items
     .map((item, idx) => `${idx + 1}. ${item.item} — $${item.price}`)
     .join("<br>");
@@ -23,21 +22,17 @@ export const sendExpenseNotification = async ({ group, items, addedBy }) => {
 
     for (const email of recipientEmails) {
       try {
-        const result = await resend.emails.send(
-          {
-            from:
-              process.env.FROM_EMAIL || "SplitMate <noreply@jenishkothari.me>",
-            to: [email],
-            subject: `🧾 New Expense in Group: ${group.name}`,
-            html,
+        const result = await resend.emails.send({
+          from:
+            process.env.FROM_EMAIL || "SplitMate <noreply@jenishkothari.me>",
+          to: [email],
+          subject: `🧾 New Expense in Group: ${group.name}`,
+          html,
+          headers: {
+            "X-Priority": "3",
+            "X-Mailer": "SplitMate Application",
           },
-          {
-            headers: {
-              "X-Priority": "3",
-              "X-Mailer": "SplitMate Application",
-            },
-          }
-        );
+        });
         results.push({ email, result });
         await new Promise((resolve) =>
           setTimeout(resolve, process.env.EMAIL_SEND_DELAY_MS || 100)
@@ -46,7 +41,6 @@ export const sendExpenseNotification = async ({ group, items, addedBy }) => {
         failures.push({ email, error });
       }
     }
-    console.log(failures);
     if (failures.length === recipientEmails.length) {
       throw new Error("All emails failed to send");
     }
