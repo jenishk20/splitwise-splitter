@@ -14,7 +14,7 @@ export function InfrastructureBanner() {
       <div className="flex items-center justify-center gap-3 text-sm font-medium">
         <Wrench className="h-4 w-4 flex-shrink-0" />
         <span className="text-center">
-          🔧 We're making infrastructure improvements to enhance your experience. Please bear with us during this time!
+          {`🔧 We're making infrastructure improvements to enhance your experience. Please bear with us during this time!`}
         </span>
         <Button
           variant="ghost"

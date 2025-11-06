@@ -8,7 +8,7 @@ import { deleteExpense } from "@/client/user";
 import { updateExpensePreferences } from "@/client/user";
 import { finalizeExpenseOnSplitwise, deleteExpenseItem } from "@/client/user";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import {
   Table,
   TableBody,

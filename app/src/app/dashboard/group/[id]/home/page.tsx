@@ -8,7 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { GroupMember } from "@/lib/types";
 import { useDropzone } from "react-dropzone";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { handleFileUpload, submitManualExpense } from "@/client/user";
 import Image from "next/image";
@@ -18,12 +18,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
-
-interface Group {
-  id: number;
-  name: string;
-  members: GroupMember[];
-}
 
 const GroupMembersCard = ({ members }: { members: GroupMember[] }) => {
   return (

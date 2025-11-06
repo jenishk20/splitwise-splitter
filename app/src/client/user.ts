@@ -118,7 +118,7 @@ export const getPendingExpenses = async (groupId : string) : Promise<any[]> => {
 
 export const deleteExpense = async (expenseId: string): Promise<void> => {
 	try {
-		const response = await axios.post(`${BASE_API_URL}/expenses/delete/${expenseId}`, {},{
+		await axios.post(`${BASE_API_URL}/expenses/delete/${expenseId}`, {},{
 			withCredentials: true,
 		});
 	
@@ -146,7 +146,7 @@ export const updateExpensePreferences = async (
 
 export const finalizeExpenseOnSplitwise = async (expenseId: string): Promise<void> => {
 	try {
-		const response = await axios.post(
+		await axios.post(
 			`${BASE_API_URL}/expenses/finalize/${expenseId}`,
 			{},
 			{ withCredentials: true }
