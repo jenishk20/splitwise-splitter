@@ -1,14 +1,9 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useUser } from "@/hooks/use-user";
 import { Separator } from "@/components/ui/separator";
-import {
-  ArrowLeftIcon,
-  Home,
-  Receipt,
-  FileText,
-} from "lucide-react";
+import { ArrowLeftIcon, Home, Receipt, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -16,7 +11,7 @@ import { usePathname } from "next/navigation";
 const Sidebar = () => {
   const { id } = useParams();
   const pathname = usePathname();
-  
+
   const isActive = (path: string) => {
     return pathname === `/dashboard/group/${id}${path}`;
   };
@@ -62,13 +57,14 @@ const Sidebar = () => {
 };
 
 export default function GroupLayout({
-	children,
+  children,
 }: {
-	children: React.ReactNode;
+  children: React.ReactNode;
 }) {
   const { id } = useParams();
   const { groups } = useUser();
   const group = groups?.find((group) => group.id === Number(id));
+  const router = useRouter();
 
   return (
     <div className="flex flex-col lg:flex-row w-full min-h-screen">
@@ -77,10 +73,12 @@ export default function GroupLayout({
         <section className="w-full h-full px-4 sm:px-6 max-w-screen-lg mx-auto">
           <div className="pt-6 lg:pt-12 flex items-center justify-between text-primary animate-fade-in">
             <div className="flex items-center gap-4">
-              <Button variant="outline" size="icon" asChild>
-                <Link href="/dashboard">
-                  <ArrowLeftIcon className="w-4 h-4" />
-                </Link>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => router.back()}
+              >
+                <ArrowLeftIcon className="w-4 h-4" />
               </Button>
               <h1 className="text-2xl lg:text-3xl font-bold">{group?.name}</h1>
             </div>

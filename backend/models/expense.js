@@ -23,6 +23,11 @@ const expenseSchema = new Schema(
       type: String,
       required: true,
     },
+    preferencesFilled: {
+      type: Map,
+      of: Boolean,
+      default: new Map(),
+    },
     items: [
       {
         item: String,
