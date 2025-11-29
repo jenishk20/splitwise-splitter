@@ -82,8 +82,6 @@ router.post("/update-preferences/:expenseId", async (req, res) => {
   const { items } = req.body;
   const userSplitWiseId = req?.user?.user_details?.user?.id;
 
-  console.log(userSplitWiseId)
-
   try {
     const expense = await ExpenseModel.findById(expenseId);
     if (!expense) {
