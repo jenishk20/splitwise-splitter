@@ -50,36 +50,40 @@ export default function ExpensesPage() {
           </div>
         ) : (
           <div className="space-y-6">
-            <div className="space-y-4">
-              <h1 className="text-lg font-semibold">
-                Preferences pending to fill 🤓
-              </h1>
-              {pendingExpensesToFill.map((expense, idx) => (
-                <ExpenseCard
-                  key={expense._id}
-                  expense={expense}
-                  index={idx}
-                  expenseOwnerId={expense.userId}
-                  groupMembers={group?.members || []}
-                  refreshExpenses={fetchPendingExpenses}
-                />
-              ))}
-            </div>
-            <div className="space-y-4">
-              <h1 className="text-lg font-semibold">
-                Preferences filled by you 😎
-              </h1>
-              {expensesFilledByUser.map((expense, idx) => (
-                <ExpenseCard
-                  key={expense._id}
-                  expense={expense}
-                  index={idx}
-                  expenseOwnerId={expense.userId}
-                  groupMembers={group?.members || []}
-                  refreshExpenses={fetchPendingExpenses}
-                />
-              ))}
-            </div>
+            {pendingExpensesToFill.length > 0 && (
+              <div className="space-y-4">
+                <h1 className="text-lg font-semibold">
+                  Preferences pending to fill 🤓
+                </h1>
+                {pendingExpensesToFill.map((expense, idx) => (
+                  <ExpenseCard
+                    key={expense._id}
+                    expense={expense}
+                    index={idx}
+                    expenseOwnerId={expense.userId}
+                    groupMembers={group?.members || []}
+                    refreshExpenses={fetchPendingExpenses}
+                  />
+                ))}
+              </div>
+            )}
+            {expensesFilledByUser.length > 0 && (
+              <div className="space-y-4">
+                <h1 className="text-lg font-semibold">
+                  Preferences filled by you 😎
+                </h1>
+                {expensesFilledByUser.map((expense, idx) => (
+                  <ExpenseCard
+                    key={expense._id}
+                    expense={expense}
+                    index={idx}
+                    expenseOwnerId={expense.userId}
+                    groupMembers={group?.members || []}
+                    refreshExpenses={fetchPendingExpenses}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
