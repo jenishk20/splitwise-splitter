@@ -9,7 +9,9 @@ const mongoose = require("mongoose");
 router.get("/get-expenses/:groupId", async (req, res) => {
   const { groupId } = req.params;
   try {
-    const expenses = await ExpenseModel.find({ groupId, status: "pending" });
+    const expenses = await ExpenseModel.find({ groupId, status: "pending" }).sort({
+      createdAt: -1
+    });
     res.json(expenses);
   } catch (err) {
     res
@@ -78,13 +80,17 @@ router.post("/submit-expense", async (req, res) => {
 router.post("/update-preferences/:expenseId", async (req, res) => {
   const { expenseId } = req.params;
   const { items } = req.body;
+  const userSplitWiseId = req?.user?.user_details?.user?.id;
 
   try {
     const expense = await ExpenseModel.findById(expenseId);
     if (!expense) {
       return res.status(404).json({ error: "Expense not found" });
     }
-
+    if (!expense.preferencesFilled) {
+      expense.preferencesFilled = new Map();
+    }
+    expense.preferencesFilled.set(userSplitWiseId.toString(), true);
     expense.items = items;
     await expense.save();
 
