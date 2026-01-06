@@ -218,12 +218,25 @@ export default function ExpensePage() {
                 <TableHead>Item</TableHead>
                 <TableHead>Qty</TableHead>
                 <TableHead>Price</TableHead>
-                {groupMembers.map((member) => (
-                  <TableHead key={member.id} className="text-center">
-                    {member.first_name}
-                  </TableHead>
-                ))}
-                <TableHead>Actions</TableHead>
+                {expense?.userId?.toString() === user?.id?.toString()
+                  ? groupMembers.map((member) => (
+                      <TableHead key={member.id} className="text-center">
+                        {member.first_name}
+                      </TableHead>
+                    ))
+                  : groupMembers
+                      .filter(
+                        (member) =>
+                          member.id?.toString() === user?.id?.toString()
+                      )
+                      .map((member) => (
+                        <TableHead key={member.id} className="text-center">
+                          {member.first_name}
+                        </TableHead>
+                      ))}
+                {expense?.userId?.toString() === user?.id?.toString() && (
+                  <TableHead>Actions</TableHead>
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -232,27 +245,57 @@ export default function ExpensePage() {
                   <TableCell>{item.item}</TableCell>
                   <TableCell>{item.quantity}</TableCell>
                   <TableCell>{item.price}</TableCell>
-                  {groupMembers.map((member) => (
-                    <TableCell key={member.id} className="text-center">
-                      <Checkbox
-                        checked={
-                          participation[idx]?.[String(member.id)] || false
-                        }
-                        onCheckedChange={(checked: boolean) =>
-                          handlePreferenceChange(
-                            idx,
-                            String(member.id),
-                            checked
-                          )
-                        }
-                        disabled={
-                          member?.id?.toString() !== user?.id?.toString() &&
-                          user?.id?.toString() !== expense?.userId?.toString()
-                        }
-                        className="cursor-pointer border-gray-300"
-                      />
-                    </TableCell>
-                  ))}
+                  {expense?.userId?.toString() === user?.id?.toString()
+                    ? groupMembers.map((member) => (
+                        <TableCell key={member.id} className="text-center">
+                          <Checkbox
+                            checked={
+                              participation[idx]?.[String(member.id)] || false
+                            }
+                            onCheckedChange={(checked: boolean) =>
+                              handlePreferenceChange(
+                                idx,
+                                String(member.id),
+                                checked
+                              )
+                            }
+                            disabled={
+                              member?.id?.toString() !== user?.id?.toString() &&
+                              user?.id?.toString() !==
+                                expense?.userId?.toString()
+                            }
+                            className="cursor-pointer border-gray-300"
+                          />
+                        </TableCell>
+                      ))
+                    : groupMembers
+                        .filter(
+                          (member) =>
+                            member.id?.toString() === user?.id?.toString()
+                        )
+                        .map((member) => (
+                          <TableCell key={member.id} className="text-center">
+                            <Checkbox
+                              checked={
+                                participation[idx]?.[String(member.id)] || false
+                              }
+                              onCheckedChange={(checked: boolean) =>
+                                handlePreferenceChange(
+                                  idx,
+                                  String(member.id),
+                                  checked
+                                )
+                              }
+                              disabled={
+                                member?.id?.toString() !==
+                                  user?.id?.toString() &&
+                                user?.id?.toString() !==
+                                  expense?.userId?.toString()
+                              }
+                              className="cursor-pointer border-gray-300"
+                            />
+                          </TableCell>
+                        ))}
                   <TableCell>
                     {expense?.userId?.toString() === user?.id?.toString() && (
                       <Button
