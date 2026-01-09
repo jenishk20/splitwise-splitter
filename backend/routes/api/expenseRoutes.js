@@ -9,8 +9,11 @@ const mongoose = require("mongoose");
 router.get("/get-expenses/:groupId", async (req, res) => {
   const { groupId } = req.params;
   try {
-    const expenses = await ExpenseModel.find({ groupId, status: "pending" }).sort({
-      createdAt: -1
+    const expenses = await ExpenseModel.find({
+      groupId,
+      status: "pending",
+    }).sort({
+      createdAt: -1,
     });
     res.json(expenses);
   } catch (err) {
@@ -132,7 +135,7 @@ router.post("/finalize/:expenseId", async (req, res) => {
 
     const result = await postToSplitwise(
       expense.groupId,
-      "Finalized Shared Expense",
+      expense.description || "Finalized Shared Expense",
       totalCost,
       userShares,
       expense.userId,
