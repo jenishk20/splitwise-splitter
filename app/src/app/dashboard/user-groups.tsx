@@ -9,16 +9,16 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { Group } from "@/lib/types";
-import { 
-  ChevronDown, 
-  ChevronUp, 
-  ArrowRight, 
-  Users, 
+import {
+  ChevronDown,
+  ChevronUp,
+  ArrowRight,
+  Users,
   Wallet,
   TrendingUp,
   TrendingDown,
   Minus,
-  FolderOpen
+  FolderOpen,
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -30,18 +30,32 @@ export const UserGroups = ({
   groups: Group[];
   isLoading: boolean;
 }) => {
+  // Sort groups: unsettled (active) first, then settled
+  const sortedGroups = [...groups].sort((a: Group, b: Group) => {
+    const aSettled = a.members.every(
+      (m) => Number(m.balance?.[0]?.amount ?? 0) === 0
+    );
+    const bSettled = b.members.every(
+      (m) => Number(m.balance?.[0]?.amount ?? 0) === 0
+    );
+    // Unsettled (false=0) comes before settled (true=1)
+    return Number(aSettled) - Number(bSettled);
+  });
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="h-1 w-8 rounded-full bg-primary" />
-          <h2 className="text-xl font-semibold text-foreground/80">Your Groups</h2>
+          <h2 className="text-xl font-semibold text-foreground/80">
+            Your Groups
+          </h2>
         </div>
         <div className="text-sm text-muted-foreground">
           {groups.length} group{groups.length !== 1 ? "s" : ""} total
         </div>
       </div>
-      
+
       {!isLoading && groups.length === 0 ? (
         <Card className="border-dashed border-2 bg-muted/20">
           <CardContent className="flex flex-col items-center justify-center py-16 text-center">
@@ -50,7 +64,8 @@ export const UserGroups = ({
             </div>
             <h3 className="text-lg font-semibold mb-2">No groups yet</h3>
             <p className="text-muted-foreground text-sm max-w-xs">
-              Groups from your Splitwise account will appear here once you have some.
+              Groups from your Splitwise account will appear here once you have
+              some.
             </p>
           </CardContent>
         </Card>
@@ -61,9 +76,9 @@ export const UserGroups = ({
                 // biome-ignore lint/suspicious/noArrayIndexKey: skeleton loading
                 <GroupCardSkeleton key={index} />
               ))
-            : groups.map((group, index) => (
-                <div 
-                  key={group.id} 
+            : sortedGroups.map((group, index) => (
+                <div
+                  key={group.id}
                   className="animate-slide-up"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
@@ -103,28 +118,34 @@ const GroupCard = ({ group }: { group: Group }) => {
   // Generate a consistent color based on group id
   const hue = (group.id * 137) % 360;
   const gradientStyle = {
-    background: `linear-gradient(135deg, hsl(${hue}, 70%, 50%), hsl(${(hue + 40) % 360}, 70%, 60%))`,
+    background: `linear-gradient(135deg, hsl(${hue}, 70%, 50%), hsl(${
+      (hue + 40) % 360
+    }, 70%, 60%))`,
   };
 
   return (
     <Card className="hover-lift group overflow-hidden border-0 shadow-lg transition-all duration-300 hover:shadow-xl">
       {/* Top accent bar */}
       <div className="h-1 w-full" style={gradientStyle} />
-      
+
       <CardHeader className="pb-3">
         <div className="flex items-start gap-4">
           <Avatar className="h-14 w-14 rounded-xl shadow-md ring-2 ring-white/50 dark:ring-black/20">
             {group.avatar?.medium ? (
-              <AvatarImage src={group.avatar.medium} alt={group.name} className="object-cover" />
+              <AvatarImage
+                src={group.avatar.medium}
+                alt={group.name}
+                className="object-cover"
+              />
             ) : null}
-            <AvatarFallback 
+            <AvatarFallback
               className="rounded-xl text-white font-bold text-lg"
               style={gradientStyle}
             >
               {groupInitials}
             </AvatarFallback>
           </Avatar>
-          
+
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
@@ -134,11 +155,12 @@ const GroupCard = ({ group }: { group: Group }) => {
                 <CardDescription className="flex items-center gap-1.5 mt-1">
                   <Users className="h-3.5 w-3.5" />
                   <span>
-                    {group.members.length} member{group.members.length !== 1 ? "s" : ""}
+                    {group.members.length} member
+                    {group.members.length !== 1 ? "s" : ""}
                   </span>
                 </CardDescription>
               </div>
-              
+
               {/* Status badge */}
               <div
                 className={`flex-shrink-0 px-2.5 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${
@@ -163,13 +185,10 @@ const GroupCard = ({ group }: { group: Group }) => {
           </div>
         </div>
       </CardHeader>
-      
+
       <CardContent className="space-y-4">
         <div className="flex gap-2">
-          <Button 
-            className="flex-1 cursor-pointer gap-2 group/btn" 
-            asChild
-          >
+          <Button className="flex-1 cursor-pointer gap-2 group/btn" asChild>
             <Link href={`/dashboard/group/${group.id}`}>
               <span>View Expenses</span>
               <ArrowRight className="h-4 w-4 transition-transform group-hover/btn:translate-x-1" />
@@ -187,11 +206,13 @@ const GroupCard = ({ group }: { group: Group }) => {
             )}
           </Button>
         </div>
-        
+
         {showDetails && (
           <div className="space-y-3 pt-3 border-t border-border/50 animate-fade-in">
             <div className="flex items-center justify-between">
-              <h4 className="font-medium text-sm text-muted-foreground">Member Balances</h4>
+              <h4 className="font-medium text-sm text-muted-foreground">
+                Member Balances
+              </h4>
             </div>
             <div className="space-y-2">
               {group.members.map((member) => {
