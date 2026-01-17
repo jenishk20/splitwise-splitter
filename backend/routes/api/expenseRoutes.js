@@ -3,11 +3,18 @@ const router = express.Router();
 const ExpenseModel = require("../../models/expense");
 const { computeUserShares } = require("../../utils/costSplitter");
 const { postToSplitwise } = require("../../services/splitwiseService");
+const { sendExpenseNotification } = require("../../services/emailService");
+const mongoose = require("mongoose");
 
 router.get("/get-expenses/:groupId", async (req, res) => {
   const { groupId } = req.params;
   try {
-    const expenses = await ExpenseModel.find({ groupId, status: "pending" });
+    const expenses = await ExpenseModel.find({
+      groupId,
+      status: "pending",
+    }).sort({
+      createdAt: -1,
+    });
     res.json(expenses);
   } catch (err) {
     res
@@ -51,6 +58,17 @@ router.post("/submit-expense", async (req, res) => {
     };
     const expenses = new ExpenseModel(data);
     await expenses.save();
+
+    try {
+      await sendExpenseNotification({
+        group: group,
+        items: sanitizedItems,
+        addedBy: userName,
+      });
+      console.log("Email notification sent successfully");
+    } catch (emailError) {
+      console.error("Failed to send email notification:", emailError);
+    }
     res.status(201).json({
       message: "Expense created successfully",
       expenseId: expenses._id,
@@ -65,13 +83,17 @@ router.post("/submit-expense", async (req, res) => {
 router.post("/update-preferences/:expenseId", async (req, res) => {
   const { expenseId } = req.params;
   const { items } = req.body;
+  const userSplitWiseId = req?.user?.user_details?.user?.id;
 
   try {
     const expense = await ExpenseModel.findById(expenseId);
     if (!expense) {
       return res.status(404).json({ error: "Expense not found" });
     }
-
+    if (!expense.preferencesFilled) {
+      expense.preferencesFilled = new Map();
+    }
+    expense.preferencesFilled.set(userSplitWiseId.toString(), true);
     expense.items = items;
     await expense.save();
 
@@ -113,7 +135,7 @@ router.post("/finalize/:expenseId", async (req, res) => {
 
     const result = await postToSplitwise(
       expense.groupId,
-      "Finalized Shared Expense",
+      expense.description || "Finalized Shared Expense",
       totalCost,
       userShares,
       expense.userId,
@@ -182,6 +204,73 @@ router.post("/delete-item/:expenseId/:itemId", async (req, res) => {
     res
       .status(500)
       .json({ error: "Failed to delete item", details: err.message });
+  }
+});
+
+router.post("/add-manual-expense", async (req, res) => {
+  try {
+    const { groupId, items, group } = req.body;
+    const userSplitWiseId = req?.user?.user_details?.user?.id;
+    const userName = req?.user?.user_details?.user?.first_name;
+
+    const description = "Custom Expense to Group";
+    const jobId = new mongoose.Types.ObjectId().toString();
+
+    const groupMembers = group.members.map((m) => m.id.toString());
+
+    const sanitizedItems = items.map((item) => {
+      const cleanedPrice = parseFloat(
+        typeof item.price === "string"
+          ? item.price.replace(/[$,]/g, "")
+          : item.price
+      );
+
+      const participation = {};
+      groupMembers.forEach((memberId) => {
+        participation[memberId] = memberId === userSplitWiseId.toString();
+      });
+
+      return {
+        item: item.name,
+        quantity: item.quantity,
+        price: cleanedPrice,
+        participation,
+      };
+    });
+
+    const data = {
+      groupId: groupId,
+      items: sanitizedItems,
+      userId: userSplitWiseId,
+      userName: userName,
+      description: description,
+      jobId: jobId,
+    };
+
+    const expenses = new ExpenseModel(data);
+    await expenses.save();
+
+    // Send email notification to group members
+    try {
+      await sendExpenseNotification({
+        group: group,
+        items: sanitizedItems,
+        addedBy: userName,
+      });
+      console.log("Email notification sent successfully");
+    } catch (emailError) {
+      console.error("Failed to send email notification:", emailError);
+    }
+
+    res.status(201).json({
+      message: "Manual expense created successfully",
+      expenseId: expenses._id,
+    });
+  } catch (err) {
+    console.error("Error creating manual expense:", err);
+    res
+      .status(500)
+      .json({ error: "Failed to create manual expense", details: err.message });
   }
 });
 

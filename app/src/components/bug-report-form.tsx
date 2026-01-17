@@ -2,13 +2,7 @@
 
 import { useState } from "react";
 import { useUser } from "@/hooks/use-user";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Select,
   SelectContent,

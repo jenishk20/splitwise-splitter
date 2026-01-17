@@ -17,7 +17,7 @@ const uploadToS3 = async (localFilePath, jobId) => {
     const s3Key = `invoices/${jobId}${ext}`;
 
     const params = {
-      Bucket: "splitmate-jobs",
+      Bucket: "splitwise-invoices-dev",
       Key: s3Key,
       Body: fileContent,
       ContentType: "image/jpeg",

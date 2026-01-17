@@ -7,3 +7,8 @@ splitwise-frontend/dist/*
 app/node_modules/*
 app/.env*
 mobile-app/*
+backend/aws-lambda/layers/*
+backend/aws-lambda/node_modules/*
+backend/aws-lambda/package-lock.json
+backend/aws-lambda/.serverless/*
+backend/lambda/*

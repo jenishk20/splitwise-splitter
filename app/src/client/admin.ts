@@ -1,6 +1,5 @@
 import axios from "axios";
 import { BASE_API_URL } from "@/lib/consts";
-import type { Group, User } from "@/lib/types";
 
 
 export const getAdminStats = async (): Promise<any> => {

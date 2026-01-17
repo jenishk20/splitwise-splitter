@@ -104,7 +104,7 @@ export interface InvoiceJob {
 export interface InvoiceItem {
 	item: string;
 	quantity: number;
-	price: number;
+	price: number | string;
 }
 
 export interface BugReport {

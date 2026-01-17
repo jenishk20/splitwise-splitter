@@ -74,6 +74,7 @@ export const getGroupJobs = async (groupId: string): Promise<any[]> => {
 	}
 };
 
+
 export const submitExpenseToGroup = async (
 	group: Group,
 	items: any[],
@@ -117,7 +118,7 @@ export const getPendingExpenses = async (groupId : string) : Promise<any[]> => {
 
 export const deleteExpense = async (expenseId: string): Promise<void> => {
 	try {
-		const response = await axios.post(`${BASE_API_URL}/expenses/delete/${expenseId}`, {},{
+		await axios.post(`${BASE_API_URL}/expenses/delete/${expenseId}`, {},{
 			withCredentials: true,
 		});
 	
@@ -145,7 +146,7 @@ export const updateExpensePreferences = async (
 
 export const finalizeExpenseOnSplitwise = async (expenseId: string): Promise<void> => {
 	try {
-		const response = await axios.post(
+		await axios.post(
 			`${BASE_API_URL}/expenses/finalize/${expenseId}`,
 			{},
 			{ withCredentials: true }
@@ -170,6 +171,33 @@ export const reportBug = async (formData: BugReportFormData): Promise<void> => {
 	} catch (error) {
 		console.error("Error reporting bug:", error);
 		throw new Error("Failed to report bug");
+	}
+};
+
+export const submitManualExpense = async (
+	groupId: number,
+	items: Array<{ name: string; quantity: number; price: number }>,
+	group: Group
+): Promise<void> => {
+	try {
+		const response = await axios.post(
+			`${BASE_API_URL}/expenses/add-manual-expense`,
+			{
+				groupId,
+				items,
+				group,
+			},
+			{
+				withCredentials: true,
+			}
+		);
+
+		if (response.status !== 201) {
+			throw new Error("Failed to submit manual expense");
+		}
+	} catch (error) {
+		console.error("Error submitting manual expense:", error);
+		throw new Error("Failed to submit manual expense");
 	}
 };
 
