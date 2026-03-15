@@ -2,6 +2,44 @@ const express = require("express");
 const router = express.Router();
 const UserModel = require("../../models/user");
 const BugModel = require("../../models/bugs");
+const ExpenseModel = require("../../models/expense");
+const InvoiceJobModel = require("../../models/invoicejob");
+
+router.get("/public-stats", async (req, res) => {
+  try {
+    const [
+      totalUsers,
+      totalReceipts,
+      totalExpenses,
+      settledExpenses,
+      itemsAgg,
+    ] = await Promise.all([
+      UserModel.countDocuments(),
+      InvoiceJobModel.countDocuments({ status: "Done" }),
+      ExpenseModel.countDocuments(),
+      ExpenseModel.countDocuments({ status: "settled" }),
+      ExpenseModel.aggregate([
+        { $project: { itemCount: { $size: "$items" } } },
+        { $group: { _id: null, total: { $sum: "$itemCount" } } },
+      ]),
+    ]);
+
+    res.json({
+      totalUsers,
+      totalReceipts,
+      totalExpenses,
+      settledExpenses,
+      totalItemsSplit: itemsAgg[0]?.total || 0,
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({
+        message: "Error fetching public statistics",
+        error: error.message,
+      });
+  }
+});
 
 // Get user registration statistics
 router.get("/stats", async (req, res) => {
@@ -10,7 +48,7 @@ router.get("/stats", async (req, res) => {
     const lastMonth = new Date(
       today.getFullYear(),
       today.getMonth() - 1,
-      today.getDate()
+      today.getDate(),
     );
 
     const totalUsers = await UserModel.countDocuments();

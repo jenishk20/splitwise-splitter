@@ -12,3 +12,4 @@ backend/aws-lambda/node_modules/*
 backend/aws-lambda/package-lock.json
 backend/aws-lambda/.serverless/*
 backend/lambda/*
+**/.DS_Store

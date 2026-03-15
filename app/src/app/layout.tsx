@@ -4,7 +4,7 @@ import { DM_Sans } from "next/font/google";
 import Providers, { ThemeProvider } from "@/components/providers";
 import { Toaster } from "@/components/ui/sonner";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
-import { InfrastructureBanner } from "@/components/infrastructure-banner";
+
 
 const dmSans = DM_Sans({
   weight: ["400", "500", "700"],
@@ -43,7 +43,6 @@ export default function RootLayout({
               defaultTheme="dark"
               disableTransitionOnChange
             >
-              <InfrastructureBanner />
               <Toaster richColors position="top-right" />
               {children}
             </ThemeProvider>

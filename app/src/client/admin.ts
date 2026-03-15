@@ -1,6 +1,18 @@
 import axios from "axios";
 import { BASE_API_URL } from "@/lib/consts";
 
+export interface PublicStats {
+  totalUsers: number;
+  totalReceipts: number;
+  totalExpenses: number;
+  settledExpenses: number;
+  totalItemsSplit: number;
+}
+
+export const getPublicStats = async (): Promise<PublicStats> => {
+  const response = await axios.get(`${BASE_API_URL}/admin/public-stats`);
+  return response.data;
+};
 
 export const getAdminStats = async (): Promise<any> => {
     const response = await axios.get(`${BASE_API_URL}/admin/stats`, {
