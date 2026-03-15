@@ -12,15 +12,27 @@ router.get("/public-stats", async (req, res) => {
       totalReceipts,
       totalExpenses,
       settledExpenses,
-      itemsAgg,
+      amountAgg,
     ] = await Promise.all([
       UserModel.countDocuments(),
       InvoiceJobModel.countDocuments({ status: "Done" }),
       ExpenseModel.countDocuments(),
       ExpenseModel.countDocuments({ status: "settled" }),
       ExpenseModel.aggregate([
-        { $project: { itemCount: { $size: "$items" } } },
-        { $group: { _id: null, total: { $sum: "$itemCount" } } },
+        { $unwind: "$items" },
+        {
+          $group: {
+            _id: null,
+            total: {
+              $sum: {
+                $multiply: [
+                  "$items.price",
+                  { $ifNull: ["$items.quantity", 1] },
+                ],
+              },
+            },
+          },
+        },
       ]),
     ]);
 
@@ -29,15 +41,13 @@ router.get("/public-stats", async (req, res) => {
       totalReceipts,
       totalExpenses,
       settledExpenses,
-      totalItemsSplit: itemsAgg[0]?.total || 0,
+      totalAmountSplit: Math.round((amountAgg[0]?.total || 0) * 100) / 100,
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        message: "Error fetching public statistics",
-        error: error.message,
-      });
+    res.status(500).json({
+      message: "Error fetching public statistics",
+      error: error.message,
+    });
   }
 });
 

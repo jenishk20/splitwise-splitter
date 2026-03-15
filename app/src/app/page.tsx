@@ -182,9 +182,9 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="text-3xl md:text-4xl font-bold text-foreground">
-                  <AnimatedCounter end={stats.totalItemsSplit} suffix="+" />
+                  $<AnimatedCounter end={Math.round(stats.totalAmountSplit)} suffix="+" />
                 </div>
-                <p className="text-sm text-muted-foreground mt-1">Items Itemized</p>
+                <p className="text-sm text-muted-foreground mt-1">Worth of Expenses Split</p>
               </div>
             </div>
           </div>

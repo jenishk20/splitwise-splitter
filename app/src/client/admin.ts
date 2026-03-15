@@ -6,7 +6,7 @@ export interface PublicStats {
   totalReceipts: number;
   totalExpenses: number;
   settledExpenses: number;
-  totalItemsSplit: number;
+  totalAmountSplit: number;
 }
 
 export const getPublicStats = async (): Promise<PublicStats> => {
