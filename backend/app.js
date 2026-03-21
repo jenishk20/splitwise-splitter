@@ -13,12 +13,13 @@ const {
 
 app.use(cookieParser());
 console.log("CORS enabled for:", process.env.FRONTEND_URL);
+app.set("trust proxy", 1);
 app.use(
   cors({
     origin: process.env.FRONTEND_URL,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  })
+  }),
 );
 
 app.use(express.json());
@@ -49,4 +50,3 @@ app.listen(process.env.PORT, () => {
       console.error("Error connecting to MongoDB:", err);
     });
 });
-
