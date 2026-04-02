@@ -118,10 +118,11 @@ router.post("/finalize/:expenseId", async (req, res) => {
       return res.status(403).json({ success: false, message: "Unauthorized" });
     }
 
-    const { totalCost, userShares } = computeUserShares(
-      expense.items,
-      expense.userId
-    );
+    const { totalCost, userShares, optimizedTransactions } =
+  computeUserShares(
+    expense.items,
+    expense.userId
+  );
     const participantCount = Object.keys(userShares).length;
     if (
       participantCount === 1 &&
@@ -157,6 +158,7 @@ router.post("/finalize/:expenseId", async (req, res) => {
       success: true,
       message: "Finalized on Splitwise",
       splitwiseExpense: result,
+      optimizedTransactions,
     });
   } catch (err) {
     res
