@@ -128,6 +128,40 @@ export const deleteExpense = async (expenseId: string): Promise<void> => {
 	}
 }
 
+export interface MemberSuggestion {
+	checked: boolean;
+	suggested: boolean;
+	probability: number;
+	reason: string | null;
+}
+
+export interface ItemSuggestion {
+	index: number;
+	itemId: string | null;
+	item: string;
+	category: string;
+	suggestions: Record<string, MemberSuggestion>;
+}
+
+// Auto-split: ask the backend to pre-fill opt-in checkboxes from group history.
+export const predictSplit = async (
+	expenseId: string,
+	memberIds: string[]
+): Promise<ItemSuggestion[]> => {
+	try {
+		const response = await axios.post(
+			`${BASE_API_URL}/expenses/predict-split/${expenseId}`,
+			{ memberIds },
+			{ withCredentials: true }
+		);
+		return response.data?.suggestions || [];
+	} catch (error) {
+		// Suggestions are best-effort; never block the opt-in flow on them.
+		console.error("Error predicting split:", error);
+		return [];
+	}
+};
+
 export const updateExpensePreferences = async (
 	expenseId: string,
 	items: any[]

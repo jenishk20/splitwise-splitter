@@ -4,6 +4,7 @@ const ExpenseModel = require("../../models/expense");
 const { computeUserShares } = require("../../utils/costSplitter");
 const { postToSplitwise } = require("../../services/splitwiseService");
 const { sendExpenseNotification } = require("../../services/emailService");
+const { suggestForExpense } = require("../../services/autoSplit");
 const mongoose = require("mongoose");
 
 router.get("/get-expenses/:groupId", async (req, res) => {
@@ -20,6 +21,40 @@ router.get("/get-expenses/:groupId", async (req, res) => {
     res
       .status(500)
       .json({ error: "Failed to fetch expenses", details: err.message });
+  }
+});
+
+// Auto-split suggestions: given a pending expense, learn from the group's
+// past expenses and suggest which line items to pre-check for each member.
+// Read-only — never mutates the expense. The frontend uses this to pre-fill
+// the opt-in checkboxes; the user can override every one.
+router.post("/predict-split/:expenseId", async (req, res) => {
+  const { expenseId } = req.params;
+  const { memberIds } = req.body;
+  try {
+    const expense = await ExpenseModel.findById(expenseId).lean();
+    if (!expense) {
+      return res.status(404).json({ error: "Expense not found" });
+    }
+
+    // Learn from every other expense in this group (history builder keeps only
+    // members who actually engaged, so partially-filled pending ones are fine).
+    const historyExpenses = await ExpenseModel.find({
+      groupId: expense.groupId,
+      _id: { $ne: expense._id },
+    }).lean();
+
+    const suggestions = suggestForExpense({
+      currentItems: expense.items,
+      historyExpenses,
+      members: memberIds,
+    });
+
+    res.json({ expenseId, suggestions });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ error: "Failed to predict split", details: err.message });
   }
 });
 
