@@ -1,3 +1,5 @@
+const minimizeTransactions = require('./debtOptimizer');
+
 const computeUserShares = (items, payerId) => {
   const userTotals = {};
   let total = 0;
@@ -38,8 +40,24 @@ const computeUserShares = (items, payerId) => {
   userIds.forEach((id, i) => {
     reconciledUserShares[id] = parseFloat(roundedShares[i].toFixed(2));
   });
+const balances = {};
 
-  return { totalCost: targetTotal, userShares: reconciledUserShares };
+// Everyone owes their share
+Object.keys(reconciledUserShares).forEach((userId) => {
+  balances[userId] = -reconciledUserShares[userId];
+});
+
+// Payer receives full amount
+balances[payerId] = (balances[payerId] || 0) + targetTotal;
+
+// Optimize settlements
+const optimizedTransactions = minimizeTransactions(balances);
+
+return {
+  totalCost: targetTotal,
+  userShares: reconciledUserShares,
+  optimizedTransactions
+};
 };
 
 module.exports = { computeUserShares };
