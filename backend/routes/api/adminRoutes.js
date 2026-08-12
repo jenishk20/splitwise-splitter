@@ -4,7 +4,11 @@ const UserModel = require("../../models/user");
 const BugModel = require("../../models/bugs");
 const ExpenseModel = require("../../models/expense");
 const InvoiceJobModel = require("../../models/invoicejob");
+const { adminAuth } = require("../middlewares/adminAuth");
 
+// Deliberately public: aggregate counts only, no personal data. The landing
+// page renders these for anonymous visitors. Every other route below exposes
+// user data and must stay behind adminAuth.
 router.get("/public-stats", async (req, res) => {
   try {
     const [
@@ -52,7 +56,7 @@ router.get("/public-stats", async (req, res) => {
 });
 
 // Get user registration statistics
-router.get("/stats", async (req, res) => {
+router.get("/stats", adminAuth, async (req, res) => {
   try {
     const today = new Date();
     const lastMonth = new Date(
@@ -81,7 +85,7 @@ router.get("/stats", async (req, res) => {
 });
 
 // Get detailed user registration data
-router.get("/users", async (req, res) => {
+router.get("/users", adminAuth, async (req, res) => {
   try {
     const users = await UserModel.find()
       .select("firstName lastName email createdAt")
@@ -96,7 +100,7 @@ router.get("/users", async (req, res) => {
 });
 
 // Get all bug reports
-router.get("/bugs", async (req, res) => {
+router.get("/bugs", adminAuth, async (req, res) => {
   try {
     const bugs = await BugModel.find().sort({ _id: -1 }); // Assuming _id contains timestamp
 

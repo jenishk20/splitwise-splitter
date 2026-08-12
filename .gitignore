@@ -1,5 +1,7 @@
 backend/node_modules/*
 .env*
+!.env.example
+!**/.env.example
 package-lock.json
 splitwise-frontend/node_modules/*
 backend/uploads/*

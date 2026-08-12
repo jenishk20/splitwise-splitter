@@ -9,6 +9,7 @@ const {
 } = require("../../services/splitwiseService");
 const UserModel = require("../../models/user");
 const cookieOptions = require("../../utils/cookieOptions");
+const { isAdminId } = require("../../utils/adminAllowlist");
 
 router.get("/auth", (req, res) => {
   const url = getAuthURL();
@@ -20,7 +21,7 @@ router.get("/callback", async (req, res) => {
   const tokens = await getToken(code);
   let user = await getCurrentUser(tokens.access_token);
   if (user && user?.user) {
-    user.user.isAdmin = true;
+    user.user.isAdmin = isAdminId(user.user.id);
   }
   const access_token = tokens.access_token;
   res.cookie("access_token", access_token, cookieOptions.accessToken);
