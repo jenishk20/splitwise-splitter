@@ -34,6 +34,12 @@ export default function ExpensePage() {
   const [suggestionMeta, setSuggestionMeta] = useState<{
     [itemIndex: number]: { [memberId: string]: string };
   }>({});
+  // Cells the member actually toggled this session. A suggestion that was
+  // pre-filled and simply submitted is honoured for the split but must not be
+  // fed back to the predictor as evidence, or it learns from its own guesses.
+  const [touched, setTouched] = useState<{
+    [itemIndex: number]: { [memberId: string]: boolean };
+  }>({});
 
   const group = groups?.find((group) => group.id === Number(id));
   const groupMembers = useMemo(() => group?.members || [], [group?.members]);
@@ -58,13 +64,19 @@ export default function ExpensePage() {
         console.log("Found expense:", foundExpense);
         if (foundExpense) {
           setExpense(foundExpense);
-          // Initialize participation state from stored values (unchanged).
+          // Initialize participation state from stored values. Cells are now
+          // { value, source } objects (older ones are bare booleans), so read
+          // the value rather than testing the cell -- an object is truthy and
+          // would opt everyone into everything.
           const initial: any = {};
           foundExpense.items.forEach((item: any, idx: number) => {
             initial[idx] = {};
             groupMembers.forEach((member) => {
+              const cell = item.participation?.[member.id];
               initial[idx][String(member.id)] =
-                item.participation?.[member.id] ?? false;
+                typeof cell === "object" && cell !== null
+                  ? !!cell.value
+                  : !!cell;
             });
           });
 
@@ -73,8 +85,6 @@ export default function ExpensePage() {
           // and only ever turn a box ON — never off. If the call fails it
           // returns [], so the page behaves exactly as before.
           const currentUserId = String(user?.id ?? "");
-          const isCreator =
-            String(foundExpense.userId) === currentUserId;
           const alreadyFilled = !!foundExpense.preferencesFilled?.[
             currentUserId
           ];
@@ -88,7 +98,12 @@ export default function ExpensePage() {
             const meta: { [i: number]: { [m: string]: string } } = {};
             suggestions.forEach((s) => {
               Object.entries(s.suggestions).forEach(([memberId, sug]) => {
-                const editable = memberId === currentUserId || isCreator;
+                // Only ever pre-fill the viewer's OWN cells. This previously
+                // also fired for the creator, who would then submit the
+                // model's guesses about everyone else as if those people had
+                // declared them -- someone who skipped the meal came back to
+                // find themselves ticked into it.
+                const editable = memberId === currentUserId;
                 // Additive only: never uncheck an existing opt-in.
                 if (editable && sug.suggested && sug.checked && sug.reason) {
                   initial[s.index][memberId] = true;
@@ -133,6 +148,10 @@ export default function ExpensePage() {
         [memberId]: value,
       },
     }));
+    setTouched((prev) => ({
+      ...prev,
+      [itemIndex]: { ...prev[itemIndex], [memberId]: true },
+    }));
   };
 
   const deleteExp = async () => {
@@ -149,10 +168,26 @@ export default function ExpensePage() {
 
   const submitPreferences = async () => {
     try {
+      // Send provenance with each cell. The server decides what it will accept
+      // and who may write which member; this only reports how the value came
+      // to be, so an untouched suggestion never enters the training set.
       const itemsWithPreferences = expense.items.map(
         (item: any, idx: number) => ({
           ...item,
-          participation: participation[idx],
+          participation: Object.fromEntries(
+            Object.entries(participation[idx] || {}).map(
+              ([memberId, value]) => [
+                memberId,
+                {
+                  value,
+                  source:
+                    !touched[idx]?.[memberId] && suggestionMeta[idx]?.[memberId]
+                      ? "suggested"
+                      : "user",
+                },
+              ]
+            )
+          ),
         })
       );
       await updateExpensePreferences(expense._id, itemsWithPreferences);

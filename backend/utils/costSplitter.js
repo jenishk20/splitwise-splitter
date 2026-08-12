@@ -1,3 +1,5 @@
+const { readEntry } = require("../services/autoSplit/participation");
+
 const computeUserShares = (items, payerId) => {
   const userTotals = {};
   let total = 0;
@@ -11,8 +13,11 @@ const computeUserShares = (items, payerId) => {
         ? Object.fromEntries(item.participation)
         : item.participation;
 
+    // readEntry, not a bare truthiness test: participation cells now carry
+    // provenance, and { value: false, ... } is a truthy object. Reading the
+    // raw value here would opt every member into every item.
     const participants = Object.entries(participationObj)
-      .filter(([_, optedIn]) => optedIn)
+      .filter(([, raw]) => readEntry(raw).value)
       .map(([userId]) => String(userId));
 
     const splitAmount = price / participants.length;

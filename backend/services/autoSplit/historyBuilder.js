@@ -1,14 +1,17 @@
 // Adapter: turn stored Expense documents into the flat observation list the
 // predictor consumes.
 //
-// Data-quality rule (important): we only learn from a member on an expense
-// where that member ACTUALLY engaged — i.e. preferencesFilled[memberId] === true.
-// At submit time every item's participation defaults to "creator only"
-// (see expenseRoutes.submit-expense), so an untouched checkbox is the default,
-// NOT a real preference. Learning from defaults would just teach the model the
-// default. We ignore those and keep only genuine signal.
+// Data-quality rule: only genuine human choices become observations. A cell
+// that the predictor pre-filled and the member simply submitted is not
+// evidence -- treating it as evidence is what let the model confirm its own
+// guesses. See services/autoSplit/participation.js for the provenance model.
 
 const { canonicalizeItem } = require("./normalize");
+const {
+  SOURCES,
+  readEntry,
+  isTrainable,
+} = require("./participation");
 
 function toPlainObject(mapOrObj) {
   if (!mapOrObj) return {};
@@ -24,21 +27,27 @@ function buildHistoryFromExpenses(expenses) {
 
   for (const expense of expenses) {
     const filled = toPlainObject(expense.preferencesFilled);
-    const engagedMembers = Object.keys(filled).filter((id) => filled[id]);
-    if (engagedMembers.length === 0) continue;
-
     const timestamp = expense.updatedAt || expense.createdAt || null;
 
     for (const rawItem of expense.items || []) {
       const { canonicalItem, category } = canonicalizeItem(rawItem.item);
       const participation = toPlainObject(rawItem.participation);
 
-      for (const memberId of engagedMembers) {
+      for (const [memberId, raw] of Object.entries(participation)) {
+        const entry = readEntry(raw);
+        if (!isTrainable(entry)) continue;
+
+        // A pre-provenance boolean says nothing about where it came from, so
+        // fall back to the old coarse signal: trust it only if that member
+        // actually engaged with the expense. Newer USER entries are already
+        // precise and need no such guard.
+        if (entry.source === SOURCES.LEGACY && !filled[memberId]) continue;
+
         observations.push({
           memberId: String(memberId),
           canonicalItem,
           category,
-          optedIn: !!participation[memberId],
+          optedIn: entry.value,
           timestamp,
         });
       }

@@ -5,7 +5,24 @@ const { computeUserShares } = require("../../utils/costSplitter");
 const { postToSplitwise } = require("../../services/splitwiseService");
 const { sendExpenseNotification } = require("../../services/emailService");
 const { suggestForExpense } = require("../../services/autoSplit");
+const {
+  SOURCES,
+  makeEntry,
+  canWrite,
+} = require("../../services/autoSplit/participation");
 const mongoose = require("mongoose");
+
+// A submitted cell is either a bare boolean (older client) or
+// { value, source }. Only SUGGESTED is accepted from the client as-is; every
+// other claim collapses to USER, so a caller cannot launder its own writes
+// into some other provenance.
+function normalizeSubmitted(raw) {
+  if (typeof raw === "boolean") return { value: raw, source: SOURCES.USER };
+  const value = !!raw?.value;
+  const source =
+    raw?.source === SOURCES.SUGGESTED ? SOURCES.SUGGESTED : SOURCES.USER;
+  return { value, source };
+}
 
 router.get("/get-expenses/:groupId", async (req, res) => {
   const { groupId } = req.params;
@@ -71,9 +88,14 @@ router.post("/submit-expense", async (req, res) => {
           : item.price
       );
 
+      // Nobody has declared anything yet: these are system defaults (payer
+      // only), tagged DEFAULT so the predictor never mistakes them for choices.
       const participation = {};
       groupMembers.forEach((memberId) => {
-        participation[memberId] = memberId === userSplitWiseId.toString();
+        participation[memberId] = makeEntry(
+          memberId === userSplitWiseId.toString(),
+          SOURCES.DEFAULT
+        );
       });
 
       return {
@@ -125,11 +147,44 @@ router.post("/update-preferences/:expenseId", async (req, res) => {
     if (!expense) {
       return res.status(404).json({ error: "Expense not found" });
     }
+    // Merge cell by cell rather than `expense.items = items`.
+    //
+    // The client posts the participation map for every member, so a blanket
+    // assignment let whoever submitted first overwrite everyone else's
+    // choices -- including with values the predictor had pre-filled on their
+    // behalf. A member who was never at the dinner would open the expense and
+    // find themselves ticked into items they had never seen.
+    const submittedItems = items || [];
+    expense.items.forEach((item, idx) => {
+      const incoming = submittedItems[idx];
+      if (!incoming) return;
+      // The client aligns by index; refuse a stale or reordered payload.
+      if (incoming._id && String(incoming._id) !== String(item._id)) return;
+
+      const submitted = incoming.participation || {};
+      if (!item.participation) item.participation = new Map();
+
+      Object.entries(submitted).forEach(([memberId, raw]) => {
+        if (
+          !canWrite({
+            actorId: userSplitWiseId,
+            memberId,
+            expenseCreatorId: expense.userId,
+          })
+        ) {
+          return;
+        }
+        const { value, source } = normalizeSubmitted(raw);
+        item.participation.set(String(memberId), makeEntry(value, source));
+      });
+    });
+
     if (!expense.preferencesFilled) {
       expense.preferencesFilled = new Map();
     }
     expense.preferencesFilled.set(userSplitWiseId.toString(), true);
-    expense.items = items;
+    // Mixed-typed Map values aren't change-tracked automatically.
+    expense.markModified("items");
     await expense.save();
 
     res.json({ message: "Preferences updated successfully" });
@@ -260,9 +315,14 @@ router.post("/add-manual-expense", async (req, res) => {
           : item.price
       );
 
+      // Nobody has declared anything yet: these are system defaults (payer
+      // only), tagged DEFAULT so the predictor never mistakes them for choices.
       const participation = {};
       groupMembers.forEach((memberId) => {
-        participation[memberId] = memberId === userSplitWiseId.toString();
+        participation[memberId] = makeEntry(
+          memberId === userSplitWiseId.toString(),
+          SOURCES.DEFAULT
+        );
       });
 
       return {
