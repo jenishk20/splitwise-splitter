@@ -13,6 +13,7 @@ const AWS = require("aws-sdk");
 const { v4: uuidv4 } = require("uuid");
 const uploadToS3 = require("../../services/uploadToS3");
 const InvoiceJobModel = require("../../models/invoicejob");
+const { track } = require("../../utils/track");
 
 const upload = multer({ dest: "uploads/" });
 const textract = new TextractClient({
@@ -40,6 +41,13 @@ router.post("/parse-invoice", upload.single("invoice"), async (req, res) => {
     });
 
     await invoiceJobModel.save();
+
+    track("receipt_uploaded", {
+      userId: String(userSplitWiseId),
+      groupId,
+      expenseId: jobId,
+    });
+
     res.status(200).json({ message: "Job submitted successfully", jobId });
   } catch (err) {
     res.status(500).json({ error: "Upload Error", details: err.message });

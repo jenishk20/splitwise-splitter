@@ -5,6 +5,7 @@ const { computeUserShares } = require("../../utils/costSplitter");
 const { postToSplitwise } = require("../../services/splitwiseService");
 const { sendExpenseNotification } = require("../../services/emailService");
 const { suggestForExpense } = require("../../services/autoSplit");
+const { track } = require("../../utils/track");
 const mongoose = require("mongoose");
 
 router.get("/get-expenses/:groupId", async (req, res) => {
@@ -94,11 +95,18 @@ router.post("/submit-expense", async (req, res) => {
     const expenses = new ExpenseModel(data);
     await expenses.save();
 
+    track("expense_created", {
+      userId: String(userSplitWiseId),
+      groupId: group?.id ? String(group.id) : null,
+      expenseId: String(expenses._id),
+    });
+
     try {
       await sendExpenseNotification({
         group: group,
         items: sanitizedItems,
         addedBy: userName,
+        expenseId: expenses._id,
       });
       console.log("Email notification sent successfully");
     } catch (emailError) {
@@ -131,6 +139,12 @@ router.post("/update-preferences/:expenseId", async (req, res) => {
     expense.preferencesFilled.set(userSplitWiseId.toString(), true);
     expense.items = items;
     await expense.save();
+
+    track("optin_completed", {
+      userId: String(userSplitWiseId),
+      groupId: expense.groupId,
+      expenseId: String(expense._id),
+    });
 
     res.json({ message: "Preferences updated successfully" });
   } catch (err) {
@@ -187,6 +201,12 @@ router.post("/finalize/:expenseId", async (req, res) => {
 
     expense.status = "settled";
     await expense.save();
+
+    track("expense_finalized", {
+      userId: String(expense.userId),
+      groupId: expense.groupId,
+      expenseId: String(expense._id),
+    });
 
     res.json({
       success: true,
@@ -285,12 +305,20 @@ router.post("/add-manual-expense", async (req, res) => {
     const expenses = new ExpenseModel(data);
     await expenses.save();
 
+    track("expense_created", {
+      userId: String(userSplitWiseId),
+      groupId: String(groupId),
+      expenseId: String(expenses._id),
+      meta: { manual: true },
+    });
+
     // Send email notification to group members
     try {
       await sendExpenseNotification({
         group: group,
         items: sanitizedItems,
         addedBy: userName,
+        expenseId: expenses._id,
       });
       console.log("Email notification sent successfully");
     } catch (emailError) {
