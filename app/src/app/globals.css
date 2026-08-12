@@ -4,37 +4,46 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Light theme.
+ *
+ * These values were originally copied from the .dark block without being
+ * inverted, which left --muted (a surface) darker than --muted-foreground
+ * (secondary text). Every `text-muted-foreground` rendered at 2.57:1 on
+ * white -- below the 4.5:1 WCAG AA floor, and unreadable on a phone
+ * outdoors, which is exactly where receipts get split.
+ *
+ * Contrast ratios below are computed, not estimated. */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0 0 0);
+  --background: oklch(0.99 0.004 264); /* faint tint so white cards lift */
+  --foreground: oklch(0.22 0.02 265); /* 16.8:1 -- softer than pure black */
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0 0 0);
+  --card-foreground: oklch(0.22 0.02 265); /* 17.3:1 */
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0 0 0);
-  --primary: oklch(0.77 0.15 163.22);
-  --primary-foreground: oklch(0 0 0);
+  --popover-foreground: oklch(0.22 0.02 265);
+  --primary: oklch(0.77 0.15 163.22); /* brand mint, unchanged */
+  --primary-foreground: oklch(0.2 0.03 165); /* 9.2:1 on mint */
   --secondary: oklch(0.97 0.01 253.85);
-  --secondary-foreground: oklch(0 0 0);
-  --muted: oklch(0.55 0.02 264.36);
-  --muted-foreground: oklch(0.71 0.02 261.32);
-  --accent: oklch(0.87 0.15 163.22);
-  --accent-foreground: oklch(0 0 0);
-  --destructive: oklch(0.64 0.21 25.33);
-  --destructive-foreground: oklch(1 0 0);
+  --secondary-foreground: oklch(0.22 0.02 265);
+  --muted: oklch(0.97 0.006 264); /* was 0.55: a surface, so it must be light */
+  --muted-foreground: oklch(0.52 0.02 264); /* was 0.71 (2.6:1); now 5.4:1 */
+  --accent: oklch(0.95 0.03 163.22); /* subtle tint; hover states shouldn't shout */
+  --accent-foreground: oklch(0.3 0.06 163); /* 11.6:1 */
+  --destructive: oklch(0.52 0.2 25.33); /* was 0.64: white text was only 3.7:1 */
+  --destructive-foreground: oklch(1 0 0); /* now 6.1:1 */
   --border: oklch(0.93 0.01 255.51);
-  --input: oklch(0.97 0.01 253.85);
-  --ring: oklch(0.78 0.13 181.91);
+  --input: oklch(0.93 0.01 255.51);
+  --ring: oklch(0.77 0.15 163.22);
   --chart-1: oklch(0.6 0.25 29.23);
   --chart-2: oklch(0.83 0.28 142.5);
   --chart-3: oklch(0.43 0.3 264.05);
   --chart-4: oklch(0.92 0.2 109.77);
   --chart-5: oklch(0.67 0.31 328.36);
   --sidebar: oklch(1 0 0);
-  --sidebar-foreground: oklch(0 0 0);
+  --sidebar-foreground: oklch(0.22 0.02 265);
   --sidebar-primary: oklch(0.77 0.15 163.22);
-  --sidebar-primary-foreground: oklch(0 0 0);
-  --sidebar-accent: oklch(0.77 0.15 163.22);
-  --sidebar-accent-foreground: oklch(0 0 0);
+  --sidebar-primary-foreground: oklch(0.2 0.03 165);
+  --sidebar-accent: oklch(0.95 0.03 163.22); /* hover tint, not full mint */
+  --sidebar-accent-foreground: oklch(0.3 0.06 163);
   --sidebar-border: oklch(0.93 0.01 255.51);
   --sidebar-ring: oklch(0.78 0.13 181.91);
   --font-sans: DM Sans;
@@ -68,7 +77,7 @@
   --primary-foreground: oklch(0 0 0);
   --secondary: oklch(0.28 0.04 260.03);
   --secondary-foreground: oklch(1 0 0);
-  --muted: oklch(0.55 0.04 257.42);
+  --muted: oklch(0.27 0.04 260.03); /* was 0.55: too light to read as a surface */
   --muted-foreground: oklch(0.71 0.04 256.79);
   --accent: oklch(0.77 0.15 163.22);
   --accent-foreground: oklch(0 0 0);

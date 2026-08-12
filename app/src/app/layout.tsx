@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { DM_Sans } from "next/font/google";
 import Providers, { ThemeProvider } from "@/components/providers";
@@ -28,6 +28,19 @@ export const metadata: Metadata = {
   },
 };
 
+// Splitting a bill happens on a phone, at the table. Lock the viewport to the
+// device width and let the browser chrome pick up the app background so the
+// page doesn't sit under a mismatched bar.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#fcfcfd" },
+    { media: "(prefers-color-scheme: dark)", color: "#12161f" },
+  ],
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -40,7 +53,7 @@ export default function RootLayout({
           <NuqsAdapter>
             <ThemeProvider
               attribute="class"
-              defaultTheme="dark"
+              defaultTheme="light"
               disableTransitionOnChange
             >
               <Toaster richColors position="top-right" />
