@@ -21,22 +21,24 @@ import { useRouter } from "next/navigation";
 
 const GroupMembersCard = ({ members }: { members: GroupMember[] }) => {
   return (
-    <Card className="col-span-1">
+    // order-2 on mobile: adding a receipt is the reason you opened this screen,
+    // so the member list shouldn't push it below the fold.
+    <Card className="order-2 col-span-1 lg:order-1">
       <CardHeader>
         <CardTitle>Members</CardTitle>
       </CardHeader>
       <CardContent>
-        <ScrollArea className="h-[300px] lg:h-[600px]">
+        <ScrollArea className="h-[240px] lg:h-[600px]">
           <ul className="space-y-4">
             {members.map((member) => (
               <li key={member.id}>
-                <div className="flex items-center gap-4">
-                  <Avatar>
+                <div className="flex items-center gap-3 sm:gap-4">
+                  <Avatar className="shrink-0">
                     <AvatarImage src={member.picture.small} />
                   </Avatar>
-                  <div>
-                    <div>{member.first_name}</div>
-                    <div className="text-xs font-semibold opacity-60">
+                  <div className="min-w-0">
+                    <div className="truncate">{member.first_name}</div>
+                    <div className="truncate text-xs font-semibold opacity-60">
                       {member.email}
                     </div>
                   </div>
@@ -216,7 +218,9 @@ const GroupExpensesCard = () => {
   };
 
   return (
-    <Card className="col-span-2">
+    // col-span-2 unqualified span two tracks in the mobile one-column grid,
+    // which made CSS Grid add an implicit column and overflow the viewport.
+    <Card className="order-1 col-span-1 lg:order-2 lg:col-span-2">
       <CardHeader>
         <CardTitle>Add Expense</CardTitle>
       </CardHeader>
@@ -273,17 +277,18 @@ const GroupExpensesCard = () => {
             ) : (
               <div
                 {...getPictureRootProps()}
-                className={`w-full h-full rounded-md border-4 
-							cursor-pointer text-muted-foreground mt-4 
-							border-border border-dashed flex flex-col items-center justify-center gap-4 ${
-                pictureFileState?.error && "border-red-800 text-red-800"
-              }`}
+                className={`mt-4 flex h-full min-h-[240px] w-full cursor-pointer
+                flex-col items-center justify-center gap-3 rounded-md border-4
+                border-dashed border-border p-4 text-center text-muted-foreground ${
+                  pictureFileState?.error && "border-red-800 text-red-800"
+                }`}
               >
-                <ImageIcon className="w-14 h-14" />
-                <h1 className="text-base">
-                  Click or drag and drop your image here or paste from clipboard
+                <ImageIcon className="h-10 w-10 sm:h-14 sm:w-14" />
+                <h1 className="text-sm sm:text-base">
+                  Tap to take a photo or pick an image &mdash; you can also drag
+                  and drop, or paste from the clipboard
                 </h1>
-                <p className="text-sm">Accepts: .png, .jpg, .jpeg</p>
+                <p className="text-xs sm:text-sm">Accepts: .png, .jpg, .jpeg</p>
                 <input {...getPictureInputProps()} />
               </div>
             )}
@@ -380,7 +385,7 @@ const GroupExpensesCard = () => {
                   </ScrollArea>
 
                   {/* Total and Submit */}
-                  <div className="flex items-center justify-between pt-4 border-t">
+                  <div className="flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="text-lg font-semibold">
                       Total: $
                       {manualItems
@@ -393,7 +398,7 @@ const GroupExpensesCard = () => {
                     <Button
                       onClick={handleSubmitManualExpense}
                       disabled={isSubmittingManual || manualItems.length === 0}
-                      className="min-w-[120px]"
+                      className="w-full sm:w-auto sm:min-w-[120px]"
                     >
                       {isSubmittingManual ? (
                         <Loader2 className="w-4 h-4 animate-spin mr-2" />

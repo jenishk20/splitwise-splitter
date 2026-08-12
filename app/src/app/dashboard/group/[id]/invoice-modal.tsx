@@ -82,7 +82,10 @@ export const InvoiceModal = ({
       <DialogTrigger asChild>
         <Button disabled={disabled}>View</Button>
       </DialogTrigger>
-      <DialogContent className="min-w-[90vw] min-h-[90vh]">
+      {/* Flex column capped at 90vh. The old min-h-[90vh] plus a fixed
+          h-[70vh] scroll area, header, textarea and footer summed past the
+          viewport, so the footer fell off the bottom of the sheet. */}
+      <DialogContent className="flex max-h-[90vh] w-[95vw] max-w-3xl flex-col overflow-hidden sm:w-[90vw]">
         <DialogHeader>
           <DialogTitle>Invoice {number}</DialogTitle>
         </DialogHeader>
@@ -95,7 +98,8 @@ export const InvoiceModal = ({
           />
         </div>
 
-        <ScrollArea className="h-[70vh]">
+        {/* Desktop: editable table. */}
+        <ScrollArea className="hidden min-h-0 flex-1 sm:block">
           <Table>
             <TableHeader>
               <TableRow className="text-center text-base font-bold">
@@ -120,6 +124,7 @@ export const InvoiceModal = ({
                   <TableCell>
                     <Input
                       type="number"
+                      inputMode="numeric"
                       value={item.quantity}
                       onChange={(e) =>
                         handleItemChange(e.target.value, idx, "quantity")
@@ -130,6 +135,7 @@ export const InvoiceModal = ({
                   <TableCell>
                     <Input
                       type="text"
+                      inputMode="decimal"
                       value={item.price}
                       onChange={(e) =>
                         handleItemChange(e.target.value, idx, "price")
@@ -142,11 +148,70 @@ export const InvoiceModal = ({
           </Table>
         </ScrollArea>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={handleAddItem}>
+        {/* Mobile: a card per line item. This is the screen you land on right
+            after photographing a receipt, so the fields have to be thumb-sized
+            and the keyboards have to be right. */}
+        <ScrollArea className="min-h-0 flex-1 sm:hidden">
+          <div className="space-y-3 pr-3">
+            {parsedResult?.map((item: InvoiceItem, idx) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+              <div key={idx} className="space-y-2 rounded-lg border p-3">
+                <div>
+                  <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    Item
+                  </label>
+                  <Input
+                    type="text"
+                    value={item.item}
+                    onChange={(e) =>
+                      handleItemChange(e.target.value, idx, "item")
+                    }
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      Qty
+                    </label>
+                    <Input
+                      type="number"
+                      inputMode="numeric"
+                      value={item.quantity}
+                      onChange={(e) =>
+                        handleItemChange(e.target.value, idx, "quantity")
+                      }
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      Price (each)
+                    </label>
+                    <Input
+                      type="text"
+                      inputMode="decimal"
+                      value={item.price}
+                      onChange={(e) =>
+                        handleItemChange(e.target.value, idx, "price")
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
+
+        <DialogFooter className="mt-4 flex-col gap-2 sm:flex-row">
+          <Button
+            variant="outline"
+            className="w-full sm:w-auto"
+            onClick={handleAddItem}
+          >
             Add Item
           </Button>
-          <Button onClick={handleSubmitExpense}>Submit Expense to Group</Button>
+          <Button className="w-full sm:w-auto" onClick={handleSubmitExpense}>
+            Submit Expense to Group
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
