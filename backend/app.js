@@ -40,6 +40,27 @@ app.use("/jobs", userAuth, apiLimiter, jobRoutes);
 app.use("/bug-reports", userAuth, apiLimiter, bugRoutes);
 app.use("/admin", apiLimiter, adminRoutes);
 
+// Terminal error handler. MUST stay last, after every route.
+//
+// Express 5 forwards a rejected promise from an async handler straight here,
+// and finalhandler then uses `err.status` for the response. An AxiosError
+// carries the UPSTREAM status, so a 403 from Splitwise was being replayed to
+// the browser as a bare "Forbidden" page with no explanation -- which is
+// exactly what users hit when API access lapsed. Never pass an upstream
+// status through as our own.
+app.use((err, req, res, next) => {
+  const upstream = err?.response?.status;
+  console.error("Unhandled error", {
+    path: req.originalUrl,
+    upstream: upstream ?? null,
+    message: err?.message,
+  });
+  if (res.headersSent) return next(err);
+  res.status(upstream ? 502 : 500).json({
+    error: upstream ? "Upstream service unavailable" : "Internal server error",
+  });
+});
+
 app.listen(process.env.PORT, () => {
   connect()
     .then(() => {

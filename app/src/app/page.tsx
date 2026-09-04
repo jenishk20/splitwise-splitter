@@ -55,9 +55,28 @@ function AnimatedCounter({ end, duration = 2000, suffix = "" }: { end: number; d
   );
 }
 
+// Reasons the backend redirects here from /login/callback. Users used to see
+// Splitwise's raw status text ("Forbidden") on a blank page instead.
+const AUTH_ERROR_MESSAGES: Record<string, string> = {
+  integration_unavailable:
+    "Splitwise sign-in is temporarily unavailable while we restore our Splitwise API access. Nothing you've split has been lost \u2014 please try again shortly.",
+  invalid_or_expired_code:
+    "That sign-in link had already been used, or it expired. Please try signing in again.",
+  missing_code: "Sign-in didn't finish. Please try again.",
+  auth_failed: "Something went wrong while signing you in. Please try again.",
+};
+
 export default function Home() {
   const [showVideo, setShowVideo] = useState(false);
   const [stats, setStats] = useState<PublicStats | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const reason = new URLSearchParams(window.location.search).get(
+      "auth_error"
+    );
+    if (reason) setAuthError(reason);
+  }, []);
 
   useEffect(() => {
     getPublicStats()
@@ -67,6 +86,14 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20 overflow-hidden">
+      {authError && (
+        <div
+          role="alert"
+          className="border-b border-destructive/30 bg-destructive/10 px-4 py-3 text-center text-sm font-medium text-destructive"
+        >
+          {AUTH_ERROR_MESSAGES[authError] ?? AUTH_ERROR_MESSAGES.auth_failed}
+        </div>
+      )}
       {/* Hero Section */}
       <section className="relative container mx-auto px-4 pt-20 pb-16 flex flex-col items-center justify-center text-center">
         <div className="absolute inset-0 pattern-dots opacity-5 pointer-events-none" />
