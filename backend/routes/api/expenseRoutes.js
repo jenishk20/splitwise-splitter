@@ -4,24 +4,19 @@ const ExpenseModel = require("../../models/expense");
 const { computeUserShares } = require("../../utils/costSplitter");
 const { postToSplitwise } = require("../../services/splitwiseService");
 const { sendExpenseNotification } = require("../../services/emailService");
-const { suggestForExpense } = require("../../services/autoSplit");
 const {
   SOURCES,
   makeEntry,
   canWrite,
-} = require("../../services/autoSplit/participation");
+} = require("../../utils/participation");
 const mongoose = require("mongoose");
 
-// A submitted cell is either a bare boolean (older client) or
-// { value, source }. Only SUGGESTED is accepted from the client as-is; every
-// other claim collapses to USER, so a caller cannot launder its own writes
-// into some other provenance.
+// A submitted cell is either a bare boolean (older client) or { value }.
+// Anything a member submits is their own choice, so the source is always USER;
+// the client cannot claim some other provenance.
 function normalizeSubmitted(raw) {
   if (typeof raw === "boolean") return { value: raw, source: SOURCES.USER };
-  const value = !!raw?.value;
-  const source =
-    raw?.source === SOURCES.SUGGESTED ? SOURCES.SUGGESTED : SOURCES.USER;
-  return { value, source };
+  return { value: !!raw?.value, source: SOURCES.USER };
 }
 
 router.get("/get-expenses/:groupId", async (req, res) => {
@@ -38,40 +33,6 @@ router.get("/get-expenses/:groupId", async (req, res) => {
     res
       .status(500)
       .json({ error: "Failed to fetch expenses", details: err.message });
-  }
-});
-
-// Auto-split suggestions: given a pending expense, learn from the group's
-// past expenses and suggest which line items to pre-check for each member.
-// Read-only — never mutates the expense. The frontend uses this to pre-fill
-// the opt-in checkboxes; the user can override every one.
-router.post("/predict-split/:expenseId", async (req, res) => {
-  const { expenseId } = req.params;
-  const { memberIds } = req.body;
-  try {
-    const expense = await ExpenseModel.findById(expenseId).lean();
-    if (!expense) {
-      return res.status(404).json({ error: "Expense not found" });
-    }
-
-    // Learn from every other expense in this group (history builder keeps only
-    // members who actually engaged, so partially-filled pending ones are fine).
-    const historyExpenses = await ExpenseModel.find({
-      groupId: expense.groupId,
-      _id: { $ne: expense._id },
-    }).lean();
-
-    const suggestions = suggestForExpense({
-      currentItems: expense.items,
-      historyExpenses,
-      members: memberIds,
-    });
-
-    res.json({ expenseId, suggestions });
-  } catch (err) {
-    res
-      .status(500)
-      .json({ error: "Failed to predict split", details: err.message });
   }
 });
 

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "app.js",
   "scripts": {
-    "test": "node --test services/**/*.test.js",
+    "test": "node --test",
     "dev": "nodemon app.js",
     "prod": "node app.js",
     "start": "node app.js"

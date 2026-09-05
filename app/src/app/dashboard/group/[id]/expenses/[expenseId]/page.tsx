@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import { deleteExpense } from "@/client/user";
 import { updateExpensePreferences } from "@/client/user";
 import { finalizeExpenseOnSplitwise, deleteExpenseItem } from "@/client/user";
-import { predictSplit } from "@/client/user";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import {
@@ -27,17 +26,6 @@ export default function ExpensePage() {
   const { user, groups } = useUser();
   const [expense, setExpense] = useState<any>(null);
   const [participation, setParticipation] = useState<{
-    [itemIndex: number]: { [memberId: string]: boolean };
-  }>({});
-  // Auto-split: per-cell "why this was pre-checked" text, for the badge tooltip.
-  // Display-only — has zero effect on what gets submitted.
-  const [suggestionMeta, setSuggestionMeta] = useState<{
-    [itemIndex: number]: { [memberId: string]: string };
-  }>({});
-  // Cells the member actually toggled this session. A suggestion that was
-  // pre-filled and simply submitted is honoured for the split but must not be
-  // fed back to the predictor as evidence, or it learns from its own guesses.
-  const [touched, setTouched] = useState<{
     [itemIndex: number]: { [memberId: string]: boolean };
   }>({});
 
@@ -80,41 +68,6 @@ export default function ExpensePage() {
             });
           });
 
-          // --- Auto-split suggestions (best-effort, purely additive) ---
-          // Only on the user's first visit (don't override saved preferences),
-          // and only ever turn a box ON — never off. If the call fails it
-          // returns [], so the page behaves exactly as before.
-          const currentUserId = String(user?.id ?? "");
-          const alreadyFilled = !!foundExpense.preferencesFilled?.[
-            currentUserId
-          ];
-
-          if (!alreadyFilled && currentUserId) {
-            const memberIds = groupMembers.map((m) => String(m.id));
-            const suggestions = await predictSplit(
-              foundExpense._id,
-              memberIds
-            );
-            const meta: { [i: number]: { [m: string]: string } } = {};
-            suggestions.forEach((s) => {
-              Object.entries(s.suggestions).forEach(([memberId, sug]) => {
-                // Only ever pre-fill the viewer's OWN cells. This previously
-                // also fired for the creator, who would then submit the
-                // model's guesses about everyone else as if those people had
-                // declared them -- someone who skipped the meal came back to
-                // find themselves ticked into it.
-                const editable = memberId === currentUserId;
-                // Additive only: never uncheck an existing opt-in.
-                if (editable && sug.suggested && sug.checked && sug.reason) {
-                  initial[s.index][memberId] = true;
-                  meta[s.index] = meta[s.index] || {};
-                  meta[s.index][memberId] = sug.reason;
-                }
-              });
-            });
-            setSuggestionMeta(meta);
-          }
-
           setParticipation(initial);
         } else {
           console.log("Expense not found!");
@@ -148,10 +101,6 @@ export default function ExpensePage() {
         [memberId]: value,
       },
     }));
-    setTouched((prev) => ({
-      ...prev,
-      [itemIndex]: { ...prev[itemIndex], [memberId]: true },
-    }));
   };
 
   const deleteExp = async () => {
@@ -168,24 +117,14 @@ export default function ExpensePage() {
 
   const submitPreferences = async () => {
     try {
-      // Send provenance with each cell. The server decides what it will accept
-      // and who may write which member; this only reports how the value came
-      // to be, so an untouched suggestion never enters the training set.
+      // The server re-derives the source and checks who may write each
+      // member's cell; this only carries the values.
       const itemsWithPreferences = expense.items.map(
         (item: any, idx: number) => ({
           ...item,
           participation: Object.fromEntries(
             Object.entries(participation[idx] || {}).map(
-              ([memberId, value]) => [
-                memberId,
-                {
-                  value,
-                  source:
-                    !touched[idx]?.[memberId] && suggestionMeta[idx]?.[memberId]
-                      ? "suggested"
-                      : "user",
-                },
-              ]
+              ([memberId, value]) => [memberId, { value }]
             )
           ),
         })
@@ -273,15 +212,6 @@ export default function ExpensePage() {
     />
   );
 
-  const renderSuggestionDot = (idx: number, member: Member) =>
-    suggestionMeta[idx]?.[String(member.id)] ? (
-      <span
-        title={suggestionMeta[idx][String(member.id)]}
-        aria-label="Suggested from past splits"
-        className="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-violet-500"
-      />
-    ) : null;
-
   return (
     <div className="w-full space-y-4">
       <div className="space-y-2">
@@ -317,12 +247,6 @@ export default function ExpensePage() {
           </p>
         </div>
       </div>
-      {Object.keys(suggestionMeta).length > 0 && (
-        <div className="rounded-lg border border-violet-500/30 bg-violet-500/10 px-4 py-2.5 text-sm text-violet-700 dark:text-violet-300">
-          ✨ We pre-filled some items based on this group&apos;s past splits.
-          Please review and adjust before submitting.
-        </div>
-      )}
       <Card>
         <CardContent className="px-2 sm:px-6">
           {/* Desktop: one column per member. */}
@@ -349,10 +273,7 @@ export default function ExpensePage() {
                     <TableCell>{item.price}</TableCell>
                     {visibleMembers.map((member) => (
                       <TableCell key={member.id} className="text-center">
-                        <div className="flex items-center justify-center gap-1.5">
-                          {renderCheckbox(idx, member)}
-                          {renderSuggestionDot(idx, member)}
-                        </div>
+                        {renderCheckbox(idx, member)}
                       </TableCell>
                     ))}
                     {/* Previously rendered unconditionally while its header was
@@ -416,7 +337,6 @@ export default function ExpensePage() {
                             <span className="truncate">
                               {member.first_name}
                             </span>
-                            {renderSuggestionDot(idx, member)}
                           </span>
                           {renderCheckbox(idx, member, "h-5 w-5")}
                         </label>

@@ -37,7 +37,7 @@ const expenseSchema = new Schema(
         // { value, source, at } so the predictor can tell a member's real
         // choice from its own suggestion. Documents written before this change
         // still hold a bare boolean, which readEntry() normalizes on read.
-        // See services/autoSplit/participation.js.
+        // See utils/participation.js.
         participation: {
           type: Map,
           of: Schema.Types.Mixed,

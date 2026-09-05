@@ -1,4 +1,4 @@
-const { readEntry } = require("../services/autoSplit/participation");
+const { readEntry } = require("./participation");
 
 const computeUserShares = (items, payerId) => {
   const userTotals = {};
